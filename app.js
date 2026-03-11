@@ -79,7 +79,7 @@ elements.analyzeButton?.addEventListener("click", async () => {
     renderResult(result, position.fen);
 
     if (position.moveHistory?.length) {
-      setStatus("Computing average centipawn loss...");
+      setStatus("Computing game move quality...");
       const acpl = await computeAverageCentipawnLoss(position.moveHistory, depth, moveTime);
       renderAcpl(acpl);
     } else {
@@ -342,14 +342,17 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       continue;
     }
 
-    setStatus(`Computing average centipawn loss... (${i + 1}/${moveHistory.length})`);
+    setStatus(`Computing game move quality... (${i + 1}/${moveHistory.length})`);
 
-    const beforeScore = await analyzeFen(move.before, depth, moveTime);
-    const afterScore = await analyzeFen(move.after, depth, moveTime);
+    const bestScore = await analyzeFen(move.before, depth, moveTime);
+    const playedMoveUci = toUciMove(move);
+    const playedScore = playedMoveUci
+      ? await analyzeFen(move.before, depth, moveTime, playedMoveUci)
+      : null;
 
-    const beforeCpForMover = scoreToCpEquivalent(beforeScore);
-    const afterCpForMover = -scoreToCpEquivalent(afterScore);
-    const loss = Math.max(0, beforeCpForMover - afterCpForMover);
+    const bestCpForMover = scoreToCpEquivalent(bestScore);
+    const playedCpForMover = playedScore ? scoreToCpEquivalent(playedScore) : bestCpForMover;
+    const loss = Math.max(0, bestCpForMover - playedCpForMover);
     const category = classifyMoveLoss(loss);
 
     totals[move.color].loss += loss;
@@ -430,7 +433,14 @@ async function ensureEngineReady() {
   return engineState.initPromise;
 }
 
-async function analyzeFen(fen, depth, moveTime) {
+function toUciMove(move) {
+  if (!move?.from || !move?.to) {
+    return null;
+  }
+  return `${move.from}${move.to}${move.promotion ? move.promotion : ""}`;
+}
+
+async function analyzeFen(fen, depth, moveTime, searchMoveUci = null) {
   await ensureEngineReady();
 
   if (!engineState.worker || !engineState.ready) {
@@ -462,7 +472,11 @@ async function analyzeFen(fen, depth, moveTime) {
 
     engineState.worker.postMessage("ucinewgame");
     engineState.worker.postMessage(`position fen ${fen}`);
-    engineState.worker.postMessage(`go depth ${depth} movetime ${moveTime}`);
+    let goCommand = `go depth ${depth} movetime ${moveTime}`;
+    if (searchMoveUci) {
+      goCommand += ` searchmoves ${searchMoveUci}`;
+    }
+    engineState.worker.postMessage(goCommand);
   });
 }
 
