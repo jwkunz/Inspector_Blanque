@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inspector Blanque</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app" aria-live="polite">
+      <header class="brand">
+        <img
+          id="brand-logo"
+          src="./Inspector_Blanque_logo.png"
+          alt="Inspector Blanque logo"
+        />
+        <h1>Inspector Blanque</h1>
+        <p>Chess position centipawn evaluator</p>
+      </header>
+
+      <section class="panel" aria-label="Position input">
+        <h2>Position Input</h2>
+        <div class="input-grid">
+          <label class="control">
+            <span>Upload PGN or FEN file</span>
+            <input id="file-input" type="file" accept=".pgn,.fen,.txt" />
+          </label>
+          <label class="control">
+            <span>Paste PGN or FEN</span>
+            <textarea
+              id="position-text"
+              rows="8"
+              placeholder="Paste a PGN game or a single FEN position"
+            ></textarea>
+          </label>
+          <label class="control">
+            <span>Paste format</span>
+            <select id="format-select">
+              <option value="auto">Auto detect</option>
+              <option value="pgn">PGN</option>
+              <option value="fen">FEN</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel controls" aria-label="Analysis controls">
+        <h2>Analysis Controls</h2>
+        <div class="input-grid compact">
+          <label class="control">
+            <span>Max depth</span>
+            <input id="depth-input" type="number" min="8" max="30" step="1" value="18" />
+          </label>
+          <label class="control">
+            <span>Max time (ms)</span>
+            <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
+          </label>
+        </div>
+        <button id="analyze-button" type="button">Analyze Position</button>
+        <p id="status-text" class="status">Ready.</p>
+        <p id="error-text" class="error" hidden></p>
+      </section>
+
+      <section class="panel result" aria-label="Evaluation result">
+        <h2>Evaluation</h2>
+        <div class="gauge-wrap">
+          <svg id="gauge" viewBox="0 0 320 190" role="img" aria-label="Centipawn gauge">
+            <path d="M 30 160 A 130 130 0 0 1 290 160" class="gauge-track"></path>
+            <line id="needle" x1="160" y1="160" x2="160" y2="45" class="needle"></line>
+            <circle cx="160" cy="160" r="8" class="needle-cap"></circle>
+            <text x="20" y="180" class="gauge-label">Black</text>
+            <text x="136" y="180" class="gauge-label">Equal</text>
+            <text x="264" y="180" class="gauge-label">White</text>
+          </svg>
+        </div>
+        <div class="scores">
+          <p id="white-score">White: --</p>
+          <p id="black-score">Black: --</p>
+          <p id="mate-score">Mate: --</p>
+        </div>
+        <p class="note">
+          The app reports evaluation only and never reveals best moves or principal variation lines.
+        </p>
+      </section>
+    </main>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
