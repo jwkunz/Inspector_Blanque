@@ -219,10 +219,10 @@ function renderAcpl(acpl) {
   }
 
   if (elements.whiteAcpl) {
-    elements.whiteAcpl.textContent = `Avg CPL: ${acpl.light.avg.toFixed(1)} (${acpl.light.percent.toFixed(1)}%)`;
+    elements.whiteAcpl.textContent = `Avg CPL: ${acpl.light.avg.toFixed(1)} (${acpl.light.quality.toFixed(1)}%)`;
   }
   if (elements.blackAcpl) {
-    elements.blackAcpl.textContent = `Avg CPL: ${acpl.dark.avg.toFixed(1)} (${acpl.dark.percent.toFixed(1)}%)`;
+    elements.blackAcpl.textContent = `Avg CPL: ${acpl.dark.avg.toFixed(1)} (${acpl.dark.quality.toFixed(1)}%)`;
   }
 }
 
@@ -281,15 +281,17 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
 
   const lightAvg = totals.w.count ? totals.w.loss / totals.w.count : 0;
   const darkAvg = totals.b.count ? totals.b.loss / totals.b.count : 0;
+  const lightLossPercent = (lightAvg / CP_CLAMP) * 100;
+  const darkLossPercent = (darkAvg / CP_CLAMP) * 100;
 
   return {
     light: {
       avg: lightAvg,
-      percent: (lightAvg / CP_CLAMP) * 100,
+      quality: Math.max(0, 100 - lightLossPercent),
     },
     dark: {
       avg: darkAvg,
-      percent: (darkAvg / CP_CLAMP) * 100,
+      quality: Math.max(0, 100 - darkLossPercent),
     },
   };
 }
