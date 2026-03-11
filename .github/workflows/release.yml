@@ -1,0 +1,54 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure tag commit is on main
+        run: |
+          git fetch origin main --depth=1
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" "origin/main"; then
+            echo "Tag ${GITHUB_REF_NAME} does not point to a commit on main. Skipping release."
+            exit 1
+          fi
+
+      - name: Build distribution
+        run: ./scripts/build_release.sh
+
+      - name: Compute release metadata
+        id: meta
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          VERSION_TAG="${VERSION//./_}"
+          ZIP_PATH="dist/Inspector_Blanque_v${VERSION_TAG}.zip"
+          DIST_DIR="dist/Inspector_Blanque_v${VERSION_TAG}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "zip_path=${ZIP_PATH}" >> "$GITHUB_OUTPUT"
+          echo "dist_dir=${DIST_DIR}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload distribution folder as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Inspector_Blanque_dist_${{ steps.meta.outputs.version }}
+          path: ${{ steps.meta.outputs.dist_dir }}
+          if-no-files-found: error
+
+      - name: Create GitHub release and upload zip
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: ${{ steps.meta.outputs.zip_path }}
