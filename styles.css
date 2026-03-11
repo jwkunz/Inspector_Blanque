@@ -179,9 +179,23 @@ button:disabled {
   margin-top: 0.5rem;
 }
 
+.score-card {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(36, 24, 15, 0.15);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+
 .scores p {
   margin: 0;
   font-weight: 600;
+}
+
+.acpl {
+  margin-top: 0.12rem;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 @media (min-width: 620px) {

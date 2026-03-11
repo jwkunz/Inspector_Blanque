@@ -14,7 +14,9 @@ const elements = {
   statusText: document.querySelector("#status-text"),
   errorText: document.querySelector("#error-text"),
   whiteScore: document.querySelector("#white-score"),
+  whiteAcpl: document.querySelector("#white-acpl"),
   blackScore: document.querySelector("#black-score"),
+  blackAcpl: document.querySelector("#black-acpl"),
   mateScore: document.querySelector("#mate-score"),
   needle: document.querySelector("#needle"),
 };
@@ -58,6 +60,15 @@ elements.analyzeButton?.addEventListener("click", async () => {
 
     const result = await analyzeFen(position.fen, depth, moveTime);
     renderResult(result, position.fen);
+
+    if (position.moveHistory?.length) {
+      setStatus("Computing average centipawn loss...");
+      const acpl = await computeAverageCentipawnLoss(position.moveHistory, depth, moveTime);
+      renderAcpl(acpl);
+    } else {
+      renderAcpl(null);
+    }
+
     setStatus("Analysis complete.");
   } catch (error) {
     setError(error instanceof Error ? error.message : String(error));
@@ -146,7 +157,7 @@ function parseFen(text) {
     throw new Error(validated.error);
   }
 
-  return { fen, multiGameDetected: false };
+  return { fen, multiGameDetected: false, moveHistory: null };
 }
 
 function parsePgnFinalFen(text) {
@@ -165,6 +176,7 @@ function parsePgnFinalFen(text) {
   return {
     fen: chess.fen(),
     multiGameDetected: gameSegments.length > 1,
+    moveHistory: chess.history({ verbose: true }),
   };
 }
 
@@ -199,6 +211,21 @@ function renderResult(result, fen) {
   }
 }
 
+function renderAcpl(acpl) {
+  if (!acpl) {
+    if (elements.whiteAcpl) elements.whiteAcpl.textContent = "Avg CPL: N/A";
+    if (elements.blackAcpl) elements.blackAcpl.textContent = "Avg CPL: N/A";
+    return;
+  }
+
+  if (elements.whiteAcpl) {
+    elements.whiteAcpl.textContent = `Avg CPL: ${acpl.light.avg.toFixed(1)} (${acpl.light.percent.toFixed(1)}%)`;
+  }
+  if (elements.blackAcpl) {
+    elements.blackAcpl.textContent = `Avg CPL: ${acpl.dark.avg.toFixed(1)} (${acpl.dark.percent.toFixed(1)}%)`;
+  }
+}
+
 function inferMateWinner(sideToMove, mateValue) {
   const stmWins = mateValue > 0;
   if (stmWins) {
@@ -218,6 +245,53 @@ function setNeedle(whiteCp) {
   if (elements.needle) {
     elements.needle.style.transform = `rotate(${angle}deg)`;
   }
+}
+
+function scoreToCpEquivalent(score) {
+  if (score.kind === "cp") {
+    return score.value;
+  }
+  return score.value >= 0 ? CP_CLAMP : -CP_CLAMP;
+}
+
+async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
+  const totals = {
+    w: { loss: 0, count: 0 },
+    b: { loss: 0, count: 0 },
+  };
+
+  for (let i = 0; i < moveHistory.length; i += 1) {
+    const move = moveHistory[i];
+    if (!move?.before || !move?.after || !move?.color) {
+      continue;
+    }
+
+    setStatus(`Computing average centipawn loss... (${i + 1}/${moveHistory.length})`);
+
+    const beforeScore = await analyzeFen(move.before, depth, moveTime);
+    const afterScore = await analyzeFen(move.after, depth, moveTime);
+
+    const beforeCpForMover = scoreToCpEquivalent(beforeScore);
+    const afterCpForMover = -scoreToCpEquivalent(afterScore);
+    const loss = Math.max(0, beforeCpForMover - afterCpForMover);
+
+    totals[move.color].loss += loss;
+    totals[move.color].count += 1;
+  }
+
+  const lightAvg = totals.w.count ? totals.w.loss / totals.w.count : 0;
+  const darkAvg = totals.b.count ? totals.b.loss / totals.b.count : 0;
+
+  return {
+    light: {
+      avg: lightAvg,
+      percent: (lightAvg / CP_CLAMP) * 100,
+    },
+    dark: {
+      avg: darkAvg,
+      percent: (darkAvg / CP_CLAMP) * 100,
+    },
+  };
 }
 
 async function ensureEngineReady() {
@@ -337,4 +411,5 @@ function handleEngineLine(line) {
 }
 
 setNeedle(0);
+renderAcpl(null);
 setStatus("Ready.");
