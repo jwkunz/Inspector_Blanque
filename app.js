@@ -156,14 +156,9 @@ function parsePgnFinalFen(text) {
 
   const chess = new Chess();
 
-  let loaded = false;
   try {
-    loaded = chess.loadPgn(chosenGame, { strict: false });
+    chess.loadPgn(chosenGame, { strict: false });
   } catch (_error) {
-    loaded = false;
-  }
-
-  if (!loaded) {
     throw new Error("Invalid PGN. Verify movetext and tags are valid.");
   }
 
