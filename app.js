@@ -31,7 +31,7 @@ const engineState = {
 };
 
 if (elements.logo) {
-  const fallbackSources = ["./Inspector_Blanque_logo.png"];
+  const fallbackSources = ["./Inspector_Blanque.png"];
   elements.logo.addEventListener("error", () => {
     const nextSrc = fallbackSources.shift();
     if (nextSrc) {

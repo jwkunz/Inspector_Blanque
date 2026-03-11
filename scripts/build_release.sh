@@ -17,7 +17,7 @@ ZIP_PATH="${DIST_DIR}/${RELEASE_BASENAME}.zip"
 rm -rf "${STAGE_DIR}" "${ZIP_PATH}"
 mkdir -p "${STAGE_DIR}"
 
-cp "${ROOT_DIR}/index.html" "${STAGE_DIR}/"
+cp "${ROOT_DIR}/index.html" "${STAGE_DIR}/Inspector_Blanque.html"
 cp "${ROOT_DIR}/styles.css" "${STAGE_DIR}/"
 cp "${ROOT_DIR}/app.js" "${STAGE_DIR}/"
 cp "${ROOT_DIR}/README.md" "${STAGE_DIR}/"

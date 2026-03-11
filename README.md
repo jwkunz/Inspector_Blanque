@@ -37,6 +37,8 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080` in Chrome or Edge.
 
+For packaged releases, open `Inspector_Blanque.html` in the distribution folder.
+
 ## Build a distributable zip
 
 Run:
@@ -49,6 +51,10 @@ This creates:
 
 - `dist/Inspector_Blanque_v1_0_0/` (distribution folder)
 - `dist/Inspector_Blanque_v1_0_0.zip` (zip artifact)
+
+Distribution entry file:
+
+- `Inspector_Blanque.html`
 
 ## Notes
 
