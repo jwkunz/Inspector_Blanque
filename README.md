@@ -15,6 +15,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - MultiPV-backed move grading using best-move gap comparisons
 - Borderline-move depth rechecks with in-run evaluation caching for more stable labels
 - Phase-aware category thresholds (opening, middlegame, endgame)
+- Mate-aware category overrides for forced-mate transitions
 - Estimated skill band per side derived from ACPL heuristics
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move, principal variation, or recommendation output shown in the UI
@@ -26,7 +27,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `app.js` - parsing + Stockfish UCI integration
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `2.4.0`)
+- `VERSION` - release version (currently `2.5.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a distributable zip in `dist/`
 
@@ -54,8 +55,8 @@ Run:
 
 This creates:
 
-- `dist/Inspector_Blanque_v2_4_0/` (distribution folder)
-- `dist/Inspector_Blanque_v2_4_0.zip` (zip artifact)
+- `dist/Inspector_Blanque_v2_5_0/` (distribution folder)
+- `dist/Inspector_Blanque_v2_5_0.zip` (zip artifact)
 
 The build script clears all prior `dist/` entries before creating the new package.
 

@@ -379,6 +379,29 @@ function setCategoryCounts(side, categories) {
   }
 }
 
+function applyMateOverride(bestScore, playedScore, fallbackCategory) {
+  const bestIsMate = bestScore?.kind === "mate";
+  const playedIsMate = playedScore?.kind === "mate";
+  const bestWinningMate = bestIsMate && bestScore.value > 0;
+  const bestLosingMate = bestIsMate && bestScore.value < 0;
+  const playedWinningMate = playedIsMate && playedScore.value > 0;
+  const playedLosingMate = playedIsMate && playedScore.value < 0;
+
+  if (playedLosingMate && !bestLosingMate) {
+    return "Blunder";
+  }
+  if (playedWinningMate) {
+    return "Best";
+  }
+  if (bestWinningMate && playedWinningMate) {
+    return "Best";
+  }
+  if (bestWinningMate && playedScore?.kind === "cp" && playedScore.value >= 400) {
+    return "Excellent";
+  }
+  return fallbackCategory;
+}
+
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
   const totals = {
     w: { loss: 0, count: 0, categories: createCategoryBucket() },
@@ -406,6 +429,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
     const phase = detectGamePhase(move, i);
     let loss = Math.max(0, bestCpForMover - playedCpForMover);
     let category = classifyMoveLoss(loss, phase);
+    category = applyMateOverride(bestAnalysis.primaryScore, playedAnalysis?.primaryScore, category);
 
     if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
       const deeperDepth = Math.min(30, depth + 2);
@@ -419,6 +443,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       playedCpForMover = scoreToCpEquivalent(playedRecheck.primaryScore);
       loss = Math.max(0, bestCpForMover - playedCpForMover);
       category = classifyMoveLoss(loss, phase);
+      category = applyMateOverride(bestRecheck.primaryScore, playedRecheck.primaryScore, category);
     }
 
     totals[move.color].loss += loss;
