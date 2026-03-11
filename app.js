@@ -322,6 +322,43 @@ function classifyMoveLoss(loss, phase = "middlegame") {
   return "Blunder";
 }
 
+function cpToWinProbability(cp) {
+  return 1 / (1 + Math.exp(-cp / 120));
+}
+
+function categoryToRank(category) {
+  return {
+    Best: 0,
+    Excellent: 1,
+    Good: 2,
+    Inaccuracy: 3,
+    Mistake: 4,
+    Blunder: 5,
+  }[category];
+}
+
+function rankToCategory(rank) {
+  return ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"][Math.max(0, Math.min(5, rank))];
+}
+
+function classifyMoveWithProbability(probLoss, cplLoss, phase = "middlegame") {
+  const phaseScale = phase === "opening" ? 1.1 : phase === "endgame" ? 0.9 : 1;
+  const thresholds = [0.01, 0.03, 0.07, 0.14, 0.25].map((value) => value * phaseScale);
+  let probCategory = "Blunder";
+  if (probLoss <= thresholds[0]) probCategory = "Best";
+  else if (probLoss <= thresholds[1]) probCategory = "Excellent";
+  else if (probLoss <= thresholds[2]) probCategory = "Good";
+  else if (probLoss <= thresholds[3]) probCategory = "Inaccuracy";
+  else if (probLoss <= thresholds[4]) probCategory = "Mistake";
+
+  const cplCategory = classifyMoveLoss(cplLoss, phase);
+  const nearProbabilityBoundary = thresholds.some((boundary) => Math.abs(probLoss - boundary) <= 0.005);
+  if (nearProbabilityBoundary) {
+    return rankToCategory(Math.max(categoryToRank(probCategory), categoryToRank(cplCategory)));
+  }
+  return probCategory;
+}
+
 function isNearCategoryBoundary(loss, phase = "middlegame", margin = 10) {
   const boundaries = getPhaseThresholds(phase);
   return boundaries.some((boundary) => Math.abs(loss - boundary) <= margin);
@@ -428,7 +465,13 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       : bestCpForMover;
     const phase = detectGamePhase(move, i);
     let loss = Math.max(0, bestCpForMover - playedCpForMover);
-    let category = classifyMoveLoss(loss, phase);
+    const bestProbForMover = cpToWinProbability(bestCpForMover);
+    const playedProbForMover = cpToWinProbability(playedCpForMover);
+    let category = classifyMoveWithProbability(
+      Math.max(0, bestProbForMover - playedProbForMover),
+      loss,
+      phase,
+    );
     category = applyMateOverride(bestAnalysis.primaryScore, playedAnalysis?.primaryScore, category);
 
     if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
@@ -442,7 +485,13 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       bestCpForMover = scoreToCpEquivalent(bestRecheck.primaryScore);
       playedCpForMover = scoreToCpEquivalent(playedRecheck.primaryScore);
       loss = Math.max(0, bestCpForMover - playedCpForMover);
-      category = classifyMoveLoss(loss, phase);
+      const bestProbForMoverRecheck = cpToWinProbability(bestCpForMover);
+      const playedProbForMoverRecheck = cpToWinProbability(playedCpForMover);
+      category = classifyMoveWithProbability(
+        Math.max(0, bestProbForMoverRecheck - playedProbForMoverRecheck),
+        loss,
+        phase,
+      );
       category = applyMateOverride(bestRecheck.primaryScore, playedRecheck.primaryScore, category);
     }
 
