@@ -75,8 +75,8 @@ elements.analyzeButton?.addEventListener("click", async () => {
     const depth = sanitizeInt(elements.depthInput?.value, 18, 8, 30);
     const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
 
-    const result = await analyzeFen(position.fen, depth, moveTime);
-    renderResult(result, position.fen);
+    const result = await analyzePosition(position.fen, depth, moveTime);
+    renderResult(result.primaryScore, position.fen);
 
     if (position.moveHistory?.length) {
       setStatus("Computing game move quality...");
@@ -344,14 +344,16 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
 
     setStatus(`Computing game move quality... (${i + 1}/${moveHistory.length})`);
 
-    const bestScore = await analyzeFen(move.before, depth, moveTime);
+    const bestAnalysis = await analyzePosition(move.before, depth, moveTime, { multiPv: 3 });
     const playedMoveUci = toUciMove(move);
-    const playedScore = playedMoveUci
-      ? await analyzeFen(move.before, depth, moveTime, playedMoveUci)
+    const playedAnalysis = playedMoveUci
+      ? await analyzePosition(move.before, depth, moveTime, { searchMoveUci: playedMoveUci, multiPv: 1 })
       : null;
 
-    const bestCpForMover = scoreToCpEquivalent(bestScore);
-    const playedCpForMover = playedScore ? scoreToCpEquivalent(playedScore) : bestCpForMover;
+    const bestCpForMover = scoreToCpEquivalent(bestAnalysis.primaryScore);
+    const playedCpForMover = playedAnalysis
+      ? scoreToCpEquivalent(playedAnalysis.primaryScore)
+      : bestCpForMover;
     const loss = Math.max(0, bestCpForMover - playedCpForMover);
     const category = classifyMoveLoss(loss);
 
@@ -440,7 +442,7 @@ function toUciMove(move) {
   return `${move.from}${move.to}${move.promotion ? move.promotion : ""}`;
 }
 
-async function analyzeFen(fen, depth, moveTime, searchMoveUci = null) {
+async function analyzePosition(fen, depth, moveTime, options = {}) {
   await ensureEngineReady();
 
   if (!engineState.worker || !engineState.ready) {
@@ -450,6 +452,9 @@ async function analyzeFen(fen, depth, moveTime, searchMoveUci = null) {
   if (engineState.activeAnalysis) {
     throw new Error("Analysis is already in progress.");
   }
+
+  const multiPv = Math.max(1, Number.parseInt(String(options.multiPv ?? 1), 10) || 1);
+  const searchMoveUci = options.searchMoveUci || null;
 
   return new Promise((resolve, reject) => {
     const timeoutMs = Math.max(3000, moveTime + 15000);
@@ -468,8 +473,15 @@ async function analyzeFen(fen, depth, moveTime, searchMoveUci = null) {
         reject(error);
       },
       lastScore: null,
+      pvScores: new Map(),
+      fen,
+      depth,
+      moveTime,
+      multiPv,
+      searchMoveUci,
     };
 
+    engineState.worker.postMessage(`setoption name MultiPV value ${multiPv}`);
     engineState.worker.postMessage("ucinewgame");
     engineState.worker.postMessage(`position fen ${fen}`);
     let goCommand = `go depth ${depth} movetime ${moveTime}`;
@@ -488,10 +500,16 @@ function handleEngineLine(line) {
 
   const scoreMatch = line.match(/\bscore\s+(cp|mate)\s+(-?\d+)/);
   if (scoreMatch) {
-    analysis.lastScore = {
+    const multipvMatch = line.match(/\bmultipv\s+(\d+)/);
+    const multipv = multipvMatch ? Number.parseInt(multipvMatch[1], 10) : 1;
+    const parsedScore = {
       kind: scoreMatch[1],
       value: Number.parseInt(scoreMatch[2], 10),
     };
+    analysis.pvScores.set(multipv, parsedScore);
+    if (multipv === 1) {
+      analysis.lastScore = parsedScore;
+    }
     return;
   }
 
@@ -504,7 +522,12 @@ function handleEngineLine(line) {
       return;
     }
 
-    analysis.resolve(finalScore);
+    analysis.resolve({
+      primaryScore: finalScore,
+      pvScores: Array.from(analysis.pvScores.entries())
+        .sort((a, b) => a[0] - b[0])
+        .map((entry) => entry[1]),
+    });
   }
 }
 
