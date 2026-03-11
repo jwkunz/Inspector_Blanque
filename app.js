@@ -302,18 +302,60 @@ function estimateEloBand(avgCpl) {
   return "<1000";
 }
 
-function classifyMoveLoss(loss) {
-  if (loss <= 15) return "Best";
-  if (loss <= 35) return "Excellent";
-  if (loss <= 70) return "Good";
-  if (loss <= 120) return "Inaccuracy";
-  if (loss <= 220) return "Mistake";
+function getPhaseThresholds(phase) {
+  if (phase === "opening") {
+    return [12, 30, 60, 100, 180];
+  }
+  if (phase === "endgame") {
+    return [10, 25, 50, 90, 170];
+  }
+  return [15, 35, 70, 120, 220];
+}
+
+function classifyMoveLoss(loss, phase = "middlegame") {
+  const [bestMax, excellentMax, goodMax, inaccuracyMax, mistakeMax] = getPhaseThresholds(phase);
+  if (loss <= bestMax) return "Best";
+  if (loss <= excellentMax) return "Excellent";
+  if (loss <= goodMax) return "Good";
+  if (loss <= inaccuracyMax) return "Inaccuracy";
+  if (loss <= mistakeMax) return "Mistake";
   return "Blunder";
 }
 
-function isNearCategoryBoundary(loss, margin = 10) {
-  const boundaries = [15, 35, 70, 120, 220];
+function isNearCategoryBoundary(loss, phase = "middlegame", margin = 10) {
+  const boundaries = getPhaseThresholds(phase);
   return boundaries.some((boundary) => Math.abs(loss - boundary) <= margin);
+}
+
+function materialScoreFromFen(fen) {
+  const board = fen.split(" ")[0] || "";
+  const pieceValues = {
+    p: 1,
+    n: 3,
+    b: 3,
+    r: 5,
+    q: 9,
+    k: 0,
+  };
+  let total = 0;
+  for (const char of board) {
+    const piece = char.toLowerCase();
+    if (pieceValues[piece] !== undefined) {
+      total += pieceValues[piece];
+    }
+  }
+  return total;
+}
+
+function detectGamePhase(move, plyIndex) {
+  const totalMaterial = materialScoreFromFen(move.before);
+  if (plyIndex < 20 && totalMaterial > 46) {
+    return "opening";
+  }
+  if (totalMaterial <= 20) {
+    return "endgame";
+  }
+  return "middlegame";
 }
 
 function createCategoryBucket() {
@@ -361,10 +403,11 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
     let playedCpForMover = playedAnalysis
       ? scoreToCpEquivalent(playedAnalysis.primaryScore)
       : bestCpForMover;
+    const phase = detectGamePhase(move, i);
     let loss = Math.max(0, bestCpForMover - playedCpForMover);
-    let category = classifyMoveLoss(loss);
+    let category = classifyMoveLoss(loss, phase);
 
-    if (isNearCategoryBoundary(loss) && playedMoveUci) {
+    if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
       const deeperDepth = Math.min(30, depth + 2);
       const deeperTime = Math.min(120000, Math.floor(moveTime * 1.5));
       const bestRecheck = await analyzePosition(move.before, deeperDepth, deeperTime, { multiPv: 3 });
@@ -375,7 +418,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       bestCpForMover = scoreToCpEquivalent(bestRecheck.primaryScore);
       playedCpForMover = scoreToCpEquivalent(playedRecheck.primaryScore);
       loss = Math.max(0, bestCpForMover - playedCpForMover);
-      category = classifyMoveLoss(loss);
+      category = classifyMoveLoss(loss, phase);
     }
 
     totals[move.color].loss += loss;
