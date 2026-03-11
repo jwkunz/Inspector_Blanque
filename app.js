@@ -439,6 +439,45 @@ function applyMateOverride(bestScore, playedScore, fallbackCategory) {
   return fallbackCategory;
 }
 
+function isMateForcedOutcome(bestScore, playedScore) {
+  const bestIsMate = bestScore?.kind === "mate";
+  const playedIsMate = playedScore?.kind === "mate";
+  const bestWinningMate = bestIsMate && bestScore.value > 0;
+  const bestLosingMate = bestIsMate && bestScore.value < 0;
+  const playedWinningMate = playedIsMate && playedScore.value > 0;
+  const playedLosingMate = playedIsMate && playedScore.value < 0;
+  return (playedLosingMate && !bestLosingMate) || playedWinningMate || (bestWinningMate && playedWinningMate);
+}
+
+function getPvSpreadCp(pvScores) {
+  if (!pvScores || pvScores.length < 2) {
+    return 999;
+  }
+  const best = scoreToCpEquivalent(pvScores[0]);
+  const second = scoreToCpEquivalent(pvScores[1]);
+  return Math.abs(best - second);
+}
+
+function adjustCategoryForConfidence(category, context) {
+  const { pvSpreadCp, volatilityCp, recheckDeltaCp, mateForced } = context;
+  if (mateForced) {
+    return category;
+  }
+
+  const lowConfidence = pvSpreadCp < 40 || (recheckDeltaCp !== null && recheckDeltaCp > 50);
+  const veryLowConfidence = pvSpreadCp < 15 && (recheckDeltaCp !== null && recheckDeltaCp > 80);
+  const highVolatility = volatilityCp > 180;
+
+  let rank = categoryToRank(category);
+  if (lowConfidence && highVolatility && rank >= categoryToRank("Inaccuracy")) {
+    rank -= 1;
+  }
+  if (veryLowConfidence && rank >= categoryToRank("Mistake")) {
+    rank -= 1;
+  }
+  return rankToCategory(rank);
+}
+
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
   const totals = {
     w: { loss: 0, count: 0, categories: createCategoryBucket() },
@@ -473,8 +512,13 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       phase,
     );
     category = applyMateOverride(bestAnalysis.primaryScore, playedAnalysis?.primaryScore, category);
+    const mateForced = isMateForcedOutcome(bestAnalysis.primaryScore, playedAnalysis?.primaryScore);
+    const pvSpreadCp = getPvSpreadCp(bestAnalysis.pvScores);
+    const volatilityCp = Math.abs(bestCpForMover - playedCpForMover);
+    let recheckDeltaCp = null;
 
     if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
+      const initialLoss = loss;
       const deeperDepth = Math.min(30, depth + 2);
       const deeperTime = Math.min(120000, Math.floor(moveTime * 1.5));
       const bestRecheck = await analyzePosition(move.before, deeperDepth, deeperTime, { multiPv: 3 });
@@ -493,7 +537,15 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
         phase,
       );
       category = applyMateOverride(bestRecheck.primaryScore, playedRecheck.primaryScore, category);
+      recheckDeltaCp = Math.abs(initialLoss - loss);
     }
+
+    category = adjustCategoryForConfidence(category, {
+      pvSpreadCp,
+      volatilityCp,
+      recheckDeltaCp,
+      mateForced,
+    });
 
     totals[move.color].loss += loss;
     totals[move.color].count += 1;
