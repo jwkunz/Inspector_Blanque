@@ -10,6 +10,8 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - VS Code-style dark interface with mobile-friendly layout
 - Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Average centipawn loss (Avg CPL) for Light and Dark, with quality percent shown as `100 - loss%`
+- Total CPL for Light and Dark over the full game
+- Move-category totals per side (`Best`, `Excellent`, `Good`, `Inaccuracy`, `Mistake`, `Blunder`)
 - Estimated skill band per side derived from ACPL heuristics
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move, principal variation, or recommendation output shown in the UI
@@ -21,7 +23,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `app.js` - parsing + Stockfish UCI integration
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `1.0.0`)
+- `VERSION` - release version (currently `2.0.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a distributable zip in `dist/`
 
@@ -49,8 +51,8 @@ Run:
 
 This creates:
 
-- `dist/Inspector_Blanque_v1_0_0/` (distribution folder)
-- `dist/Inspector_Blanque_v1_0_0.zip` (zip artifact)
+- `dist/Inspector_Blanque_v2_0_0/` (distribution folder)
+- `dist/Inspector_Blanque_v2_0_0.zip` (zip artifact)
 
 Distribution entry file:
 

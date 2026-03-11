@@ -15,9 +15,13 @@ const elements = {
   errorText: document.querySelector("#error-text"),
   whiteScore: document.querySelector("#white-score"),
   whiteAcpl: document.querySelector("#white-acpl"),
+  whiteTotalCpl: document.querySelector("#white-total-cpl"),
+  whiteCategories: document.querySelector("#white-categories"),
   whiteLevel: document.querySelector("#white-level"),
   blackScore: document.querySelector("#black-score"),
   blackAcpl: document.querySelector("#black-acpl"),
+  blackTotalCpl: document.querySelector("#black-total-cpl"),
+  blackCategories: document.querySelector("#black-categories"),
   blackLevel: document.querySelector("#black-level"),
   mateScore: document.querySelector("#mate-score"),
   needle: document.querySelector("#needle"),
@@ -217,6 +221,10 @@ function renderAcpl(acpl) {
   if (!acpl) {
     if (elements.whiteAcpl) elements.whiteAcpl.textContent = "Avg CPL: N/A";
     if (elements.blackAcpl) elements.blackAcpl.textContent = "Avg CPL: N/A";
+    if (elements.whiteTotalCpl) elements.whiteTotalCpl.textContent = "Total CPL: N/A";
+    if (elements.blackTotalCpl) elements.blackTotalCpl.textContent = "Total CPL: N/A";
+    if (elements.whiteCategories) elements.whiteCategories.textContent = "Move Categories: N/A";
+    if (elements.blackCategories) elements.blackCategories.textContent = "Move Categories: N/A";
     if (elements.whiteLevel) elements.whiteLevel.textContent = "Estimated Level: N/A";
     if (elements.blackLevel) elements.blackLevel.textContent = "Estimated Level: N/A";
     return;
@@ -227,6 +235,18 @@ function renderAcpl(acpl) {
   }
   if (elements.blackAcpl) {
     elements.blackAcpl.textContent = `Avg CPL: ${acpl.dark.avg.toFixed(1)} (${acpl.dark.quality.toFixed(1)}%)`;
+  }
+  if (elements.whiteTotalCpl) {
+    elements.whiteTotalCpl.textContent = `Total CPL: ${acpl.light.total.toFixed(0)}`;
+  }
+  if (elements.blackTotalCpl) {
+    elements.blackTotalCpl.textContent = `Total CPL: ${acpl.dark.total.toFixed(0)}`;
+  }
+  if (elements.whiteCategories) {
+    elements.whiteCategories.textContent = formatCategoryTotals(acpl.light.categories);
+  }
+  if (elements.blackCategories) {
+    elements.blackCategories.textContent = formatCategoryTotals(acpl.dark.categories);
   }
   if (elements.whiteLevel) {
     elements.whiteLevel.textContent = `Estimated Level: ${estimateEloBand(acpl.light.avg)}`;
@@ -273,10 +293,41 @@ function estimateEloBand(avgCpl) {
   return "<1000";
 }
 
+function classifyMoveLoss(loss) {
+  if (loss <= 15) return "Best";
+  if (loss <= 35) return "Excellent";
+  if (loss <= 70) return "Good";
+  if (loss <= 120) return "Inaccuracy";
+  if (loss <= 220) return "Mistake";
+  return "Blunder";
+}
+
+function createCategoryBucket() {
+  return {
+    Best: 0,
+    Excellent: 0,
+    Good: 0,
+    Inaccuracy: 0,
+    Mistake: 0,
+    Blunder: 0,
+  };
+}
+
+function formatCategoryTotals(categories) {
+  return [
+    `Best ${categories.Best}`,
+    `Excellent ${categories.Excellent}`,
+    `Good ${categories.Good}`,
+    `Inacc ${categories.Inaccuracy}`,
+    `Mistake ${categories.Mistake}`,
+    `Blunder ${categories.Blunder}`,
+  ].join(" | ");
+}
+
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
   const totals = {
-    w: { loss: 0, count: 0 },
-    b: { loss: 0, count: 0 },
+    w: { loss: 0, count: 0, categories: createCategoryBucket() },
+    b: { loss: 0, count: 0, categories: createCategoryBucket() },
   };
 
   for (let i = 0; i < moveHistory.length; i += 1) {
@@ -293,9 +344,11 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
     const beforeCpForMover = scoreToCpEquivalent(beforeScore);
     const afterCpForMover = -scoreToCpEquivalent(afterScore);
     const loss = Math.max(0, beforeCpForMover - afterCpForMover);
+    const category = classifyMoveLoss(loss);
 
     totals[move.color].loss += loss;
     totals[move.color].count += 1;
+    totals[move.color].categories[category] += 1;
   }
 
   const lightAvg = totals.w.count ? totals.w.loss / totals.w.count : 0;
@@ -306,11 +359,15 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
   return {
     light: {
       avg: lightAvg,
+      total: totals.w.loss,
       quality: Math.max(0, 100 - lightLossPercent),
+      categories: totals.w.categories,
     },
     dark: {
       avg: darkAvg,
+      total: totals.b.loss,
       quality: Math.max(0, 100 - darkLossPercent),
+      categories: totals.b.categories,
     },
   };
 }
