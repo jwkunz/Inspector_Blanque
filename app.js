@@ -27,7 +27,13 @@ const engineState = {
 };
 
 if (elements.logo) {
+  const fallbackSources = ["./Inspector_Blanque_logo.png"];
   elements.logo.addEventListener("error", () => {
+    const nextSrc = fallbackSources.shift();
+    if (nextSrc) {
+      elements.logo.src = nextSrc;
+      return;
+    }
     elements.logo.hidden = true;
   });
 }
