@@ -1,13 +1,16 @@
 :root {
-  --wood-light: #d6a48d;
-  --wood-medium: #9e4f3a;
-  --wood-dark: #5a2317;
-  --green-accent: #2f7d32;
-  --green-soft: #a4c89c;
-  --surface: #f6ebe3;
-  --text-primary: #2d1912;
-  --text-muted: #694638;
-  --error: #8d1f1f;
+  --bg-0: #1e1e1e;
+  --bg-1: #252526;
+  --bg-2: #2d2d30;
+  --bg-3: #333337;
+  --border: #3e3e42;
+  --accent: #0e639c;
+  --accent-hover: #1177bb;
+  --accent-soft: #264f78;
+  --text-primary: #d4d4d4;
+  --text-muted: #9da1a6;
+  --text-strong: #ffffff;
+  --error: #f48771;
 }
 
 * {
@@ -20,17 +23,16 @@ body {
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   color: var(--text-primary);
   background:
-    radial-gradient(140% 80% at 0% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 50%),
-    radial-gradient(130% 70% at 100% 100%, rgba(69, 21, 14, 0.35), rgba(69, 21, 14, 0) 52%),
+    radial-gradient(140% 90% at 0% 0%, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 52%),
+    radial-gradient(140% 80% at 100% 100%, rgba(14, 99, 156, 0.08), rgba(14, 99, 156, 0) 56%),
     repeating-linear-gradient(
-      18deg,
-      rgba(240, 187, 159, 0.18) 0px,
-      rgba(240, 187, 159, 0.18) 10px,
-      rgba(130, 54, 37, 0.18) 10px,
-      rgba(130, 54, 37, 0.18) 20px
+      180deg,
+      rgba(255, 255, 255, 0.012) 0px,
+      rgba(255, 255, 255, 0.012) 1px,
+      rgba(0, 0, 0, 0) 1px,
+      rgba(0, 0, 0, 0) 6px
     ),
-    linear-gradient(120deg, rgba(255, 220, 198, 0.2), rgba(78, 28, 18, 0.3)),
-    var(--wood-medium);
+    var(--bg-0);
 }
 
 .app {
@@ -43,11 +45,11 @@ body {
 
 .brand,
 .panel {
-  background: var(--surface);
-  border: 1px solid rgba(36, 24, 15, 0.2);
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 0.9rem;
-  box-shadow: 0 10px 24px rgba(36, 24, 15, 0.16);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
 }
 
 .brand {
@@ -64,6 +66,7 @@ body {
 .brand h1 {
   margin: 0;
   font-size: clamp(1.25rem, 4vw, 1.9rem);
+  color: var(--text-strong);
 }
 
 .brand p {
@@ -95,7 +98,7 @@ select,
 button {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(36, 24, 15, 0.25);
+  border: 1px solid var(--border);
   font: inherit;
 }
 
@@ -103,8 +106,15 @@ input,
 textarea,
 select {
   padding: 0.64rem;
-  background: #fffef9;
+  background: var(--bg-3);
   color: var(--text-primary);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 1px solid var(--accent-soft);
+  border-color: var(--accent);
 }
 
 textarea {
@@ -115,11 +125,15 @@ button {
   margin-top: 0.7rem;
   padding: 0.85rem;
   border: 0;
-  background: linear-gradient(160deg, var(--green-accent), #206123);
-  color: #f8fff8;
+  background: linear-gradient(180deg, var(--accent), #0a4f7a);
+  color: #f3f9ff;
   font-weight: 600;
   letter-spacing: 0.01em;
   min-height: 46px;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--accent-hover), #0d5e93);
 }
 
 button:disabled {
@@ -141,7 +155,8 @@ button:disabled {
 .gauge-wrap {
   overflow: hidden;
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(164, 200, 156, 0.25), transparent);
+  background: linear-gradient(180deg, rgba(38, 79, 120, 0.24), rgba(38, 79, 120, 0.05));
+  border: 1px solid var(--border);
 }
 
 #gauge {
@@ -158,7 +173,7 @@ button:disabled {
 }
 
 .needle {
-  stroke: #1f2620;
+  stroke: #cdd6df;
   stroke-width: 6;
   stroke-linecap: round;
   transform-origin: 160px 160px;
@@ -166,7 +181,7 @@ button:disabled {
 }
 
 .needle-cap {
-  fill: #1f2620;
+  fill: #cdd6df;
 }
 
 .gauge-label {
@@ -182,8 +197,8 @@ button:disabled {
 }
 
 .score-card {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(36, 24, 15, 0.15);
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.45rem 0.55rem;
 }
