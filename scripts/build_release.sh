@@ -14,7 +14,8 @@ DIST_DIR="${ROOT_DIR}/dist"
 STAGE_DIR="${DIST_DIR}/${RELEASE_BASENAME}"
 ZIP_PATH="${DIST_DIR}/${RELEASE_BASENAME}.zip"
 
-rm -rf "${STAGE_DIR}" "${ZIP_PATH}"
+mkdir -p "${DIST_DIR}"
+find "${DIST_DIR}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 mkdir -p "${STAGE_DIR}"
 
 cp "${ROOT_DIR}/index.html" "${STAGE_DIR}/Inspector_Blanque.html"

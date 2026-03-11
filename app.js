@@ -2,6 +2,7 @@ import { Chess, validateFen } from "./vendor/chess/chess.js";
 
 const CP_CLAMP = 1000;
 const ENGINE_PATH = "./vendor/stockfish/stockfish-18-lite-single.js";
+const CATEGORY_KEYS = ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
 
 const elements = {
   logo: document.querySelector("#brand-logo"),
@@ -16,12 +17,22 @@ const elements = {
   whiteScore: document.querySelector("#white-score"),
   whiteAcpl: document.querySelector("#white-acpl"),
   whiteTotalCpl: document.querySelector("#white-total-cpl"),
-  whiteCategories: document.querySelector("#white-categories"),
+  whiteCatBest: document.querySelector("#white-cat-best"),
+  whiteCatExcellent: document.querySelector("#white-cat-excellent"),
+  whiteCatGood: document.querySelector("#white-cat-good"),
+  whiteCatInaccuracy: document.querySelector("#white-cat-inaccuracy"),
+  whiteCatMistake: document.querySelector("#white-cat-mistake"),
+  whiteCatBlunder: document.querySelector("#white-cat-blunder"),
   whiteLevel: document.querySelector("#white-level"),
   blackScore: document.querySelector("#black-score"),
   blackAcpl: document.querySelector("#black-acpl"),
   blackTotalCpl: document.querySelector("#black-total-cpl"),
-  blackCategories: document.querySelector("#black-categories"),
+  blackCatBest: document.querySelector("#black-cat-best"),
+  blackCatExcellent: document.querySelector("#black-cat-excellent"),
+  blackCatGood: document.querySelector("#black-cat-good"),
+  blackCatInaccuracy: document.querySelector("#black-cat-inaccuracy"),
+  blackCatMistake: document.querySelector("#black-cat-mistake"),
+  blackCatBlunder: document.querySelector("#black-cat-blunder"),
   blackLevel: document.querySelector("#black-level"),
   mateScore: document.querySelector("#mate-score"),
   needle: document.querySelector("#needle"),
@@ -223,8 +234,8 @@ function renderAcpl(acpl) {
     if (elements.blackAcpl) elements.blackAcpl.textContent = "Avg CPL: N/A";
     if (elements.whiteTotalCpl) elements.whiteTotalCpl.textContent = "Total CPL: N/A";
     if (elements.blackTotalCpl) elements.blackTotalCpl.textContent = "Total CPL: N/A";
-    if (elements.whiteCategories) elements.whiteCategories.textContent = "Move Categories: N/A";
-    if (elements.blackCategories) elements.blackCategories.textContent = "Move Categories: N/A";
+    setCategoryCounts("white", null);
+    setCategoryCounts("black", null);
     if (elements.whiteLevel) elements.whiteLevel.textContent = "Estimated Level: N/A";
     if (elements.blackLevel) elements.blackLevel.textContent = "Estimated Level: N/A";
     return;
@@ -242,12 +253,8 @@ function renderAcpl(acpl) {
   if (elements.blackTotalCpl) {
     elements.blackTotalCpl.textContent = `Total CPL: ${acpl.dark.total.toFixed(0)}`;
   }
-  if (elements.whiteCategories) {
-    elements.whiteCategories.textContent = formatCategoryTotals(acpl.light.categories);
-  }
-  if (elements.blackCategories) {
-    elements.blackCategories.textContent = formatCategoryTotals(acpl.dark.categories);
-  }
+  setCategoryCounts("white", acpl.light.categories);
+  setCategoryCounts("black", acpl.dark.categories);
   if (elements.whiteLevel) {
     elements.whiteLevel.textContent = `Estimated Level: ${estimateEloBand(acpl.light.avg)}`;
   }
@@ -313,15 +320,14 @@ function createCategoryBucket() {
   };
 }
 
-function formatCategoryTotals(categories) {
-  return [
-    `Best ${categories.Best}`,
-    `Excellent ${categories.Excellent}`,
-    `Good ${categories.Good}`,
-    `Inacc ${categories.Inaccuracy}`,
-    `Mistake ${categories.Mistake}`,
-    `Blunder ${categories.Blunder}`,
-  ].join(" | ");
+function setCategoryCounts(side, categories) {
+  const sidePrefix = side === "white" ? "whiteCat" : "blackCat";
+  for (const key of CATEGORY_KEYS) {
+    const cell = elements[`${sidePrefix}${key}`];
+    if (cell) {
+      cell.textContent = categories ? String(categories[key]) : "N/A";
+    }
+  }
 }
 
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {

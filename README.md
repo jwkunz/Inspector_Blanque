@@ -11,7 +11,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Average centipawn loss (Avg CPL) for Light and Dark, with quality percent shown as `100 - loss%`
 - Total CPL for Light and Dark over the full game
-- Move-category totals per side (`Best`, `Excellent`, `Good`, `Inaccuracy`, `Mistake`, `Blunder`)
+- Move-category totals per side shown in table format with emoji markers (`Best`, `Excellent`, `Good`, `Inaccuracy`, `Mistake`, `Blunder`)
 - Estimated skill band per side derived from ACPL heuristics
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move, principal variation, or recommendation output shown in the UI
@@ -53,6 +53,8 @@ This creates:
 
 - `dist/Inspector_Blanque_v2_0_0/` (distribution folder)
 - `dist/Inspector_Blanque_v2_0_0.zip` (zip artifact)
+
+The build script clears all prior `dist/` entries before creating the new package.
 
 Distribution entry file:
 

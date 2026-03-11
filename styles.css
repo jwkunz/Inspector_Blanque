@@ -224,11 +224,29 @@ button:disabled {
   color: var(--text-muted);
 }
 
-.category-summary {
-  margin-top: 0.15rem;
-  font-size: 0.78rem;
-  line-height: 1.35;
+.category-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.2rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
+}
+
+.category-table th,
+.category-table td {
+  border-bottom: 1px solid rgba(62, 62, 66, 0.65);
+  padding: 0.15rem 0.1rem;
+}
+
+.category-table th {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: left;
+}
+
+.category-table td:last-child,
+.category-table th:last-child {
+  text-align: right;
 }
 
 .legal {
