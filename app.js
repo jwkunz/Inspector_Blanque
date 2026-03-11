@@ -175,8 +175,8 @@ function renderResult(result, fen) {
     const whiteCp = sideToMove === "w" ? result.value : -result.value;
     const blackCp = -whiteCp;
 
-    if (elements.whiteScore) elements.whiteScore.textContent = `White: ${formatCp(whiteCp)}`;
-    if (elements.blackScore) elements.blackScore.textContent = `Black: ${formatCp(blackCp)}`;
+    if (elements.whiteScore) elements.whiteScore.textContent = `Light: ${formatCp(whiteCp)}`;
+    if (elements.blackScore) elements.blackScore.textContent = `Dark: ${formatCp(blackCp)}`;
     if (elements.mateScore) elements.mateScore.textContent = "Mate: --";
 
     setNeedle(whiteCp);
@@ -187,14 +187,14 @@ function renderResult(result, fen) {
   const matePly = Math.abs(result.value);
 
   if (winner === "w") {
-    if (elements.whiteScore) elements.whiteScore.textContent = `White: Mate in ${matePly}`;
-    if (elements.blackScore) elements.blackScore.textContent = `Black: Mated in ${matePly}`;
-    if (elements.mateScore) elements.mateScore.textContent = `Mate: White in ${matePly}`;
+    if (elements.whiteScore) elements.whiteScore.textContent = `Light: Mate in ${matePly}`;
+    if (elements.blackScore) elements.blackScore.textContent = `Dark: Mated in ${matePly}`;
+    if (elements.mateScore) elements.mateScore.textContent = `Mate: Light in ${matePly}`;
     setNeedle(CP_CLAMP);
   } else {
-    if (elements.whiteScore) elements.whiteScore.textContent = `White: Mated in ${matePly}`;
-    if (elements.blackScore) elements.blackScore.textContent = `Black: Mate in ${matePly}`;
-    if (elements.mateScore) elements.mateScore.textContent = `Mate: Black in ${matePly}`;
+    if (elements.whiteScore) elements.whiteScore.textContent = `Light: Mated in ${matePly}`;
+    if (elements.blackScore) elements.blackScore.textContent = `Dark: Mate in ${matePly}`;
+    if (elements.mateScore) elements.mateScore.textContent = `Mate: Dark in ${matePly}`;
     setNeedle(-CP_CLAMP);
   }
 }

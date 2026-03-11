@@ -151,7 +151,6 @@ button:disabled {
 
 .gauge-track {
   fill: none;
-  stroke: var(--green-soft);
   stroke-width: 22;
   stroke-linecap: round;
 }

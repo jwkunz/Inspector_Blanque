@@ -7,7 +7,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Upload or paste PGN/FEN input
 - PGN analysis defaults to the final position in the first game
 - Local, offline Stockfish WASM evaluation in browser
-- White-perspective centipawn gauge with mirrored White/Black score text
+- Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move, principal variation, or recommendation output shown in the UI
 
