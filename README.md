@@ -7,6 +7,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Upload or paste PGN/FEN input
 - PGN analysis defaults to the final position in the first game
 - Local, offline Stockfish WASM evaluation in browser
+- VS Code-style dark interface with mobile-friendly layout
 - Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Average centipawn loss (Avg CPL) for Light and Dark, with quality percent shown as `100 - loss%`
 - Estimated skill band per side derived from ACPL heuristics
@@ -16,10 +17,15 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 ## Files
 
 - `index.html` - single-page interface
-- `styles.css` - mobile-first wood + green theme
+- `styles.css` - VS Code-style dark theme
 - `app.js` - parsing + Stockfish UCI integration
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/stockfish/*` - local Stockfish worker + wasm
+- `VERSION` - release version (currently `1.0.0`)
+- `MIT_LICENSE.txt` - MIT license text for this project
+- `scripts/build_release.sh` - packages a distributable zip in `dist/`
+
+Third-party dependencies in `vendor/` retain their upstream licenses.
 
 ## Run
 
@@ -30,6 +36,19 @@ python3 -m http.server 8080
 ```
 
 Then open `http://localhost:8080` in Chrome or Edge.
+
+## Build a distributable zip
+
+Run:
+
+```bash
+./scripts/build_release.sh
+```
+
+This creates:
+
+- `dist/Inspector_Blanque_v1_0_0/` (distribution folder)
+- `dist/Inspector_Blanque_v1_0_0.zip` (zip artifact)
 
 ## Notes
 
