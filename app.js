@@ -43,6 +43,7 @@ const engineState = {
   ready: false,
   initPromise: null,
   activeAnalysis: null,
+  cache: new Map(),
 };
 
 if (elements.logo) {
@@ -60,6 +61,7 @@ if (elements.logo) {
 elements.analyzeButton?.addEventListener("click", async () => {
   clearError();
   setBusy(true);
+  engineState.cache.clear();
 
   try {
     const source = await getInputText();
@@ -309,6 +311,11 @@ function classifyMoveLoss(loss) {
   return "Blunder";
 }
 
+function isNearCategoryBoundary(loss, margin = 10) {
+  const boundaries = [15, 35, 70, 120, 220];
+  return boundaries.some((boundary) => Math.abs(loss - boundary) <= margin);
+}
+
 function createCategoryBucket() {
   return {
     Best: 0,
@@ -350,12 +357,26 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
       ? await analyzePosition(move.before, depth, moveTime, { searchMoveUci: playedMoveUci, multiPv: 1 })
       : null;
 
-    const bestCpForMover = scoreToCpEquivalent(bestAnalysis.primaryScore);
-    const playedCpForMover = playedAnalysis
+    let bestCpForMover = scoreToCpEquivalent(bestAnalysis.primaryScore);
+    let playedCpForMover = playedAnalysis
       ? scoreToCpEquivalent(playedAnalysis.primaryScore)
       : bestCpForMover;
-    const loss = Math.max(0, bestCpForMover - playedCpForMover);
-    const category = classifyMoveLoss(loss);
+    let loss = Math.max(0, bestCpForMover - playedCpForMover);
+    let category = classifyMoveLoss(loss);
+
+    if (isNearCategoryBoundary(loss) && playedMoveUci) {
+      const deeperDepth = Math.min(30, depth + 2);
+      const deeperTime = Math.min(120000, Math.floor(moveTime * 1.5));
+      const bestRecheck = await analyzePosition(move.before, deeperDepth, deeperTime, { multiPv: 3 });
+      const playedRecheck = await analyzePosition(move.before, deeperDepth, deeperTime, {
+        searchMoveUci: playedMoveUci,
+        multiPv: 1,
+      });
+      bestCpForMover = scoreToCpEquivalent(bestRecheck.primaryScore);
+      playedCpForMover = scoreToCpEquivalent(playedRecheck.primaryScore);
+      loss = Math.max(0, bestCpForMover - playedCpForMover);
+      category = classifyMoveLoss(loss);
+    }
 
     totals[move.color].loss += loss;
     totals[move.color].count += 1;
@@ -455,6 +476,10 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
 
   const multiPv = Math.max(1, Number.parseInt(String(options.multiPv ?? 1), 10) || 1);
   const searchMoveUci = options.searchMoveUci || null;
+  const cacheKey = `${fen}|d${depth}|t${moveTime}|mpv${multiPv}|sm:${searchMoveUci || "-"}`;
+  if (engineState.cache.has(cacheKey)) {
+    return engineState.cache.get(cacheKey);
+  }
 
   return new Promise((resolve, reject) => {
     const timeoutMs = Math.max(3000, moveTime + 15000);
@@ -522,12 +547,17 @@ function handleEngineLine(line) {
       return;
     }
 
-    analysis.resolve({
+    const result = {
       primaryScore: finalScore,
       pvScores: Array.from(analysis.pvScores.entries())
         .sort((a, b) => a[0] - b[0])
         .map((entry) => entry[1]),
-    });
+    };
+    engineState.cache.set(
+      `${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}`,
+      result,
+    );
+    analysis.resolve(result);
   }
 }
 
