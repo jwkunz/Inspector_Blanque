@@ -15,8 +15,10 @@ const elements = {
   errorText: document.querySelector("#error-text"),
   whiteScore: document.querySelector("#white-score"),
   whiteAcpl: document.querySelector("#white-acpl"),
+  whiteLevel: document.querySelector("#white-level"),
   blackScore: document.querySelector("#black-score"),
   blackAcpl: document.querySelector("#black-acpl"),
+  blackLevel: document.querySelector("#black-level"),
   mateScore: document.querySelector("#mate-score"),
   needle: document.querySelector("#needle"),
 };
@@ -215,6 +217,8 @@ function renderAcpl(acpl) {
   if (!acpl) {
     if (elements.whiteAcpl) elements.whiteAcpl.textContent = "Avg CPL: N/A";
     if (elements.blackAcpl) elements.blackAcpl.textContent = "Avg CPL: N/A";
+    if (elements.whiteLevel) elements.whiteLevel.textContent = "Estimated Level: N/A";
+    if (elements.blackLevel) elements.blackLevel.textContent = "Estimated Level: N/A";
     return;
   }
 
@@ -223,6 +227,12 @@ function renderAcpl(acpl) {
   }
   if (elements.blackAcpl) {
     elements.blackAcpl.textContent = `Avg CPL: ${acpl.dark.avg.toFixed(1)} (${acpl.dark.quality.toFixed(1)}%)`;
+  }
+  if (elements.whiteLevel) {
+    elements.whiteLevel.textContent = `Estimated Level: ${estimateEloBand(acpl.light.avg)}`;
+  }
+  if (elements.blackLevel) {
+    elements.blackLevel.textContent = `Estimated Level: ${estimateEloBand(acpl.dark.avg)}`;
   }
 }
 
@@ -252,6 +262,15 @@ function scoreToCpEquivalent(score) {
     return score.value;
   }
   return score.value >= 0 ? CP_CLAMP : -CP_CLAMP;
+}
+
+function estimateEloBand(avgCpl) {
+  if (avgCpl <= 15) return "~2200+";
+  if (avgCpl <= 25) return "~1900-2200";
+  if (avgCpl <= 40) return "~1600-1900";
+  if (avgCpl <= 60) return "~1300-1600";
+  if (avgCpl <= 85) return "~1000-1300";
+  return "<1000";
 }
 
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {

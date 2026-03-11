@@ -1,12 +1,12 @@
 :root {
-  --wood-light: #ddbc8e;
-  --wood-medium: #b4885a;
-  --wood-dark: #6f4a2d;
+  --wood-light: #d6a48d;
+  --wood-medium: #9e4f3a;
+  --wood-dark: #5a2317;
   --green-accent: #2f7d32;
   --green-soft: #a4c89c;
-  --surface: #f6ebdd;
-  --text-primary: #24180f;
-  --text-muted: #5a4634;
+  --surface: #f6ebe3;
+  --text-primary: #2d1912;
+  --text-muted: #694638;
   --error: #8d1f1f;
 }
 
@@ -20,14 +20,16 @@ body {
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   color: var(--text-primary);
   background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(111, 74, 45, 0.1)),
+    radial-gradient(140% 80% at 0% 0%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 50%),
+    radial-gradient(130% 70% at 100% 100%, rgba(69, 21, 14, 0.35), rgba(69, 21, 14, 0) 52%),
     repeating-linear-gradient(
-      45deg,
-      rgba(221, 188, 142, 0.2),
-      rgba(221, 188, 142, 0.2) 12px,
-      rgba(180, 136, 90, 0.15) 12px,
-      rgba(180, 136, 90, 0.15) 24px
+      18deg,
+      rgba(240, 187, 159, 0.18) 0px,
+      rgba(240, 187, 159, 0.18) 10px,
+      rgba(130, 54, 37, 0.18) 10px,
+      rgba(130, 54, 37, 0.18) 20px
     ),
+    linear-gradient(120deg, rgba(255, 220, 198, 0.2), rgba(78, 28, 18, 0.3)),
     var(--wood-medium);
 }
 
@@ -194,6 +196,13 @@ button:disabled {
 .acpl {
   margin-top: 0.12rem;
   font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.level {
+  margin-top: 0.1rem;
+  font-size: 0.84rem;
   font-weight: 500;
   color: var(--text-muted);
 }

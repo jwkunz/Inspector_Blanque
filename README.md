@@ -9,6 +9,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Local, offline Stockfish WASM evaluation in browser
 - Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Average centipawn loss (Avg CPL) for Light and Dark, with quality percent shown as `100 - loss%`
+- Estimated skill band per side derived from ACPL heuristics
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move, principal variation, or recommendation output shown in the UI
 
