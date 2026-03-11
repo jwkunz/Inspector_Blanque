@@ -74,7 +74,7 @@ elements.analyzeButton?.addEventListener("click", async () => {
       setStatus("Analyzing position...");
     }
 
-    const depth = sanitizeInt(elements.depthInput?.value, 18, 8, 30);
+    const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
     const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
 
     const result = await analyzePosition(position.fen, depth, moveTime);
