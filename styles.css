@@ -57,10 +57,12 @@ body {
 }
 
 #brand-logo {
-  width: min(62vw, 240px);
-  max-height: 86px;
+  width: min(86vw, 430px);
+  max-height: 180px;
   object-fit: contain;
-  margin: 0 auto 0.4rem;
+  margin: 0 auto 0.55rem;
+  display: block;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.45));
 }
 
 .brand h1 {
@@ -220,6 +222,17 @@ button:disabled {
   font-size: 0.84rem;
   font-weight: 500;
   color: var(--text-muted);
+}
+
+.legal {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.legal p {
+  margin: 0.2rem 0 0.1rem;
 }
 
 @media (min-width: 620px) {
