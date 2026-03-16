@@ -1,0 +1,9 @@
+Chess piece SVG assets in vendor/pieces/cburnett/ are the
+"Wikimedia commons chess pieces" by Colin M. L. Burnett.
+
+Source:
+https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
+
+License:
+Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
+https://creativecommons.org/licenses/by-sa/3.0/

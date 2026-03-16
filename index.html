@@ -61,6 +61,62 @@
         <p id="error-text" class="error" hidden></p>
       </section>
 
+      <section id="game-view-panel" class="panel game-view" aria-label="Game view" hidden>
+        <div class="panel-heading">
+          <h2>Game View</h2>
+          <div class="game-view-heading-actions">
+            <button id="show-best-move-button" class="secondary-button best-move-button" type="button">
+              Show Best Move
+            </button>
+            <p id="game-view-position" class="game-view-position">Position --</p>
+          </div>
+        </div>
+        <div id="game-time-meta" class="game-time-meta" hidden>
+          <span id="time-control" class="game-time-pill" hidden></span>
+          <span id="light-clock" class="game-time-pill" hidden></span>
+          <span id="dark-clock" class="game-time-pill" hidden></span>
+        </div>
+        <p id="best-move-text" class="best-move-text" hidden></p>
+        <p id="move-characterization" class="move-characterization" hidden></p>
+        <div class="board-shell">
+          <div class="board-stage">
+            <div id="game-board" class="game-board" aria-label="Chessboard"></div>
+            <svg id="move-arrow-layer" class="move-arrow-layer" aria-hidden="true"></svg>
+          </div>
+        </div>
+        <div class="game-view-controls">
+          <button id="jump-start-button" class="secondary-button nav-button" type="button" aria-label="Jump to beginning">
+            |&lt;
+          </button>
+          <button
+            id="prev-blunder-button"
+            class="secondary-button wide-button"
+            type="button"
+            aria-label="Jump backward to previous mistake or blunder"
+          >
+            Prev Mist/Blunder
+          </button>
+          <button id="prev-move-button" class="secondary-button nav-button" type="button" aria-label="Previous move">
+            ←
+          </button>
+          <button id="flip-board-button" class="secondary-button" type="button">Flip Board</button>
+          <button id="next-move-button" class="secondary-button nav-button" type="button" aria-label="Next move">
+            →
+          </button>
+          <button
+            id="next-blunder-button"
+            class="secondary-button wide-button"
+            type="button"
+            aria-label="Jump forward to next mistake or blunder"
+          >
+            Next Mist/Blunder
+          </button>
+          <button id="jump-end-button" class="secondary-button nav-button" type="button" aria-label="Jump to end">
+            &gt;|
+          </button>
+        </div>
+      </section>
+
       <section class="panel result" aria-label="Evaluation result">
         <h2>Evaluation</h2>
         <div class="gauge-wrap">
@@ -87,6 +143,7 @@
         <div class="scores">
           <div class="score-card">
             <p id="black-score">Dark: --</p>
+            <p id="black-player" class="player-meta" hidden></p>
             <p id="black-acpl" class="acpl">Avg CPL: --</p>
             <p id="black-total-cpl" class="acpl">Total CPL: --</p>
             <table class="category-table" aria-label="Dark move category totals">
@@ -112,6 +169,7 @@
           </div>
           <div class="score-card">
             <p id="white-score">Light: --</p>
+            <p id="white-player" class="player-meta" hidden></p>
             <p id="white-acpl" class="acpl">Avg CPL: --</p>
             <p id="white-total-cpl" class="acpl">Total CPL: --</p>
             <table class="category-table" aria-label="Light move category totals">
@@ -134,7 +192,7 @@
           </div>
         </div>
         <p class="note">
-          The app reports evaluation only and never reveals best moves or principal variation lines.
+          The app reports evaluation by default and reveals a best move only when you explicitly request it. Principal variation lines remain hidden.
         </p>
       </section>
 

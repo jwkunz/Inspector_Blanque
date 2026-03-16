@@ -11,6 +11,8 @@
   --text-muted: #9da1a6;
   --text-strong: #ffffff;
   --error: #f48771;
+  --board-light: #efe4c8;
+  --board-dark: #7f5d40;
 }
 
 * {
@@ -142,6 +144,17 @@ button:disabled {
   opacity: 0.6;
 }
 
+.secondary-button {
+  margin-top: 0;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--bg-3), #27272a);
+  color: var(--text-primary);
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #414146, #2c2c31);
+}
+
 .status,
 .error,
 .note {
@@ -152,6 +165,168 @@ button:disabled {
 .error {
   color: var(--error);
   font-weight: 600;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.game-view-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.game-view-position {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+.best-move-button {
+  min-height: 38px;
+  padding: 0.55rem 0.85rem;
+  width: auto;
+}
+
+.best-move-text {
+  margin: 0 0 0.7rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(73, 182, 91, 0.38);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(73, 182, 91, 0.2), rgba(34, 96, 46, 0.08));
+  color: #eaf8ec;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.game-time-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem;
+}
+
+.game-time-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid rgba(17, 119, 187, 0.28);
+  border-radius: 999px;
+  background: rgba(38, 79, 120, 0.16);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.move-characterization {
+  margin: 0 0 0.7rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(17, 119, 187, 0.35);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(17, 119, 187, 0.22), rgba(38, 79, 120, 0.1));
+  color: var(--text-strong);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.board-shell {
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 44%),
+    linear-gradient(180deg, rgba(38, 79, 120, 0.22), rgba(0, 0, 0, 0.12));
+}
+
+.board-stage {
+  position: relative;
+  width: min(100%, 520px);
+  margin: 0 auto;
+}
+
+.game-board {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.38);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.move-arrow-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.board-square {
+  position: relative;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-square.light {
+  background: var(--board-light);
+}
+
+.board-square.dark {
+  background: var(--board-dark);
+}
+
+.board-piece {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.28));
+}
+
+.square-label {
+  position: absolute;
+  left: 0.24rem;
+  bottom: 0.18rem;
+  font-size: 0.64rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+.board-square.light .square-label {
+  color: rgba(39, 29, 16, 0.72);
+}
+
+.board-square.dark .square-label {
+  color: rgba(248, 240, 230, 0.72);
+}
+
+.game-view-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.nav-button {
+  font-size: 1.55rem;
+}
+
+.wide-button {
+  font-size: 0.9rem;
+  line-height: 1.2;
 }
 
 .gauge-wrap {
@@ -217,6 +392,13 @@ button:disabled {
   color: var(--text-muted);
 }
 
+.player-meta {
+  margin-top: 0.12rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
 .level {
   margin-top: 0.1rem;
   font-size: 0.84rem;
@@ -263,6 +445,10 @@ button:disabled {
 @media (min-width: 620px) {
   .input-grid.compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .game-view-controls {
+    grid-template-columns: 72px minmax(0, 1.4fr) 72px minmax(0, 1fr) 72px minmax(0, 1.4fr) 72px;
   }
 
   .scores {
