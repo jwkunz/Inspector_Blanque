@@ -149,6 +149,7 @@ elements.jumpStartButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex = 0;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -157,6 +158,7 @@ elements.jumpEndButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex = gameViewState.timeline.length - 1;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -166,6 +168,7 @@ elements.prevBlunderButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex = targetIndex;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -174,6 +177,7 @@ elements.prevMoveButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex -= 1;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -182,6 +186,7 @@ elements.nextMoveButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex += 1;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -191,6 +196,7 @@ elements.nextBlunderButton?.addEventListener("click", () => {
     return;
   }
   gameViewState.currentIndex = targetIndex;
+  hideBestMove();
   renderCurrentGameView();
 });
 
@@ -207,8 +213,7 @@ elements.showBestMoveButton?.addEventListener("click", async () => {
     return;
   }
 
-  const entry = gameViewState.timeline[gameViewState.currentIndex];
-  const fen = entry?.fen || "";
+  const fen = getBestMoveAnalysisFen();
   if (!fen) {
     renderCurrentGameView();
     return;
@@ -451,9 +456,6 @@ function renderCurrentGameView() {
   renderViewedEvaluation();
   updateNavigationControls();
   updateBestMoveButton();
-  if (gameViewState.bestMoveVisible) {
-    void ensureBestMoveForFen(gameViewState.timeline[gameViewState.currentIndex]?.fen || "");
-  }
 }
 
 function renderGameViewPosition() {
@@ -551,6 +553,11 @@ function updateBestMoveButton() {
     return;
   }
   elements.showBestMoveButton.textContent = gameViewState.bestMoveVisible ? "Hide Best Move" : "Show Best Move";
+}
+
+function hideBestMove() {
+  gameViewState.bestMoveVisible = false;
+  updateBestMoveButton();
 }
 
 function updateNavigationControls() {
@@ -723,7 +730,7 @@ function renderBoardArrows() {
   }
 
   if (gameViewState.bestMoveVisible) {
-    const bestMove = gameViewState.bestMoves.get(gameViewState.timeline[gameViewState.currentIndex]?.fen || "");
+    const bestMove = gameViewState.bestMoves.get(getBestMoveAnalysisFen());
     const bestMoveOverlay = buildArrowOverlay(bestMove, gameViewState.orientation, width, {
       markerId: "best-move-arrow-head",
       markerFill: "rgba(103, 232, 130, 0.95)",
@@ -825,13 +832,13 @@ function renderBestMove() {
   }
 
   if (!gameViewState.bestMoveVisible) {
-    elements.bestMoveText.hidden = true;
-    elements.bestMoveText.textContent = "";
+    elements.bestMoveText.textContent = "\u00a0";
+    elements.bestMoveText.classList.add("is-empty");
     return;
   }
 
-  const bestMove = gameViewState.bestMoves.get(gameViewState.timeline[gameViewState.currentIndex]?.fen || "");
-  elements.bestMoveText.hidden = false;
+  const bestMove = gameViewState.bestMoves.get(getBestMoveAnalysisFen());
+  elements.bestMoveText.classList.remove("is-empty");
   elements.bestMoveText.textContent = bestMove?.san ? `Best move: ${bestMove.san}` : "Best move: calculating...";
 }
 
@@ -886,6 +893,16 @@ async function ensureBestMoveForFen(fen) {
   } finally {
     setStatus(priorStatus);
   }
+}
+
+function getBestMoveAnalysisFen() {
+  if (!gameViewState.timeline.length) {
+    return "";
+  }
+  if (gameViewState.currentIndex <= 0) {
+    return gameViewState.timeline[0]?.fen || "";
+  }
+  return gameViewState.timeline[gameViewState.currentIndex - 1]?.fen || "";
 }
 
 function renderResult(result, fen) {

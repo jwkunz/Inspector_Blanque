@@ -196,6 +196,7 @@ button:disabled {
 
 .best-move-text {
   margin: 0 0 0.7rem;
+  min-height: 2.45rem;
   padding: 0.55rem 0.75rem;
   border: 1px solid rgba(73, 182, 91, 0.38);
   border-radius: 10px;
@@ -204,6 +205,12 @@ button:disabled {
   font-size: 0.92rem;
   font-weight: 600;
   text-align: center;
+}
+
+.best-move-text.is-empty {
+  visibility: hidden;
+  border-color: transparent;
+  background: transparent;
 }
 
 .game-time-meta {

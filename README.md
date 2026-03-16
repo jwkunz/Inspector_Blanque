@@ -36,7 +36,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `3.2.0`)
+- `VERSION` - release version (currently `3.3.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a distributable zip in `dist/`
 
@@ -65,8 +65,8 @@ Run:
 
 This creates:
 
-- `dist/Inspector_Blanque_v3_2_0/` (distribution folder)
-- `dist/Inspector_Blanque_v3_2_0.zip` (zip artifact)
+- `dist/Inspector_Blanque_v3_3_0/` (distribution folder)
+- `dist/Inspector_Blanque_v3_3_0.zip` (zip artifact)
 
 The build script clears all prior `dist/` entries before creating the new package.
 
