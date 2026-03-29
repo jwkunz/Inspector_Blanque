@@ -38,7 +38,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/stockfish/*` - local Stockfish worker + wasm
 - `VERSION` - release version (currently `3.3.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
-- `scripts/build_release.sh` - packages a distributable zip in `dist/`
+- `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
 Third-party dependencies in `vendor/` retain their upstream licenses.
 The chess piece SVGs in `vendor/pieces/` are by Colin M. L. Burnett under CC BY-SA 3.0.
@@ -53,9 +53,9 @@ python3 -m http.server 8080
 
 Then open `http://localhost:8080` in Chrome or Edge.
 
-For packaged releases, open `Inspector_Blanque.html` in the distribution folder.
+For packaged releases, open the generated single-file HTML in the `dist/` folder.
 
-## Build a distributable zip
+## Build a single-file release
 
 Run:
 
@@ -63,16 +63,11 @@ Run:
 ./scripts/build_release.sh
 ```
 
-This creates:
+This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v3_3_0/` (distribution folder)
-- `dist/Inspector_Blanque_v3_3_0.zip` (zip artifact)
+- `dist/Inspector_Blanque_v3_3_0_single_file.html`
 
-The build script clears all prior `dist/` entries before creating the new package.
-
-Distribution entry file:
-
-- `Inspector_Blanque.html`
+The build script clears prior `dist/` entries before creating the new package.
 
 ## Notes
 

@@ -33,22 +33,13 @@ jobs:
         run: |
           VERSION="$(tr -d '[:space:]' < VERSION)"
           VERSION_TAG="${VERSION//./_}"
-          ZIP_PATH="dist/Inspector_Blanque_v${VERSION_TAG}.zip"
-          DIST_DIR="dist/Inspector_Blanque_v${VERSION_TAG}"
+          HTML_PATH="dist/Inspector_Blanque_v${VERSION_TAG}_single_file.html"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "zip_path=${ZIP_PATH}" >> "$GITHUB_OUTPUT"
-          echo "dist_dir=${DIST_DIR}" >> "$GITHUB_OUTPUT"
+          echo "html_path=${HTML_PATH}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload distribution folder as workflow artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Inspector_Blanque_dist_${{ steps.meta.outputs.version }}
-          path: ${{ steps.meta.outputs.dist_dir }}
-          if-no-files-found: error
-
-      - name: Create GitHub release and upload zip
+      - name: Create GitHub release and upload single-file app
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: ${{ steps.meta.outputs.zip_path }}
+          files: ${{ steps.meta.outputs.html_path }}
