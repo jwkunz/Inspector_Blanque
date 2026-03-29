@@ -44,7 +44,14 @@ styles_css = read_text(root / "styles.css")
 app_js = read_text(root / "app.js")
 chess_js = read_text(root / "vendor/chess/chess.js")
 stockfish_js = read_text(root / "vendor/stockfish/stockfish-18-lite-single.js")
-stockfish_wasm_url = data_url(root / "vendor/stockfish/stockfish-18-lite-single.wasm")
+stockfish_wasm_base64 = base64.b64encode(
+    (root / "vendor/stockfish/stockfish-18-lite-single.wasm").read_bytes()
+).decode("ascii")
+stockfish_js = stockfish_js.replace(
+    'r={locateFile:function(e){return-1<e.indexOf(".wasm")?-1<e.indexOf(".wasm.map")?a+".map":n||a:self.location.origin+self.location.pathname+"#"+a+",worker"},listener:function(e){postMessage(e)}}',
+    'r={wasmBinary:Uint8Array.from(atob("__INSPECTOR_WASM_BASE64__"),function(c){return c.charCodeAt(0)}),locateFile:function(e){return-1<e.indexOf(".wasm")?-1<e.indexOf(".wasm.map")?a+".map":n||a:self.location.origin+self.location.pathname},listener:function(e){postMessage(e)}}',
+)
+stockfish_js = stockfish_js.replace("__INSPECTOR_WASM_BASE64__", stockfish_wasm_base64)
 
 logo_paths = [
     root / "Inspector_Blanque_logo.png",
@@ -98,10 +105,9 @@ chess_js = re.sub(r"\n//# sourceMappingURL=.*\n?$", "\n", chess_js, flags=re.MUL
 
 inline_module = f"""
 const stockfishSource = {json.dumps(stockfish_js)};
-const stockfishWasmDataUrl = {json.dumps(stockfish_wasm_url)};
 const stockfishWorkerBlob = new Blob([stockfishSource], {{ type: "application/javascript" }});
 const stockfishWorkerBaseUrl = URL.createObjectURL(stockfishWorkerBlob);
-window.__INSPECTOR_STOCKFISH_WORKER_URL__ = `${{stockfishWorkerBaseUrl}}#${{encodeURIComponent(stockfishWasmDataUrl)}},worker`;
+window.__INSPECTOR_STOCKFISH_WORKER_URL__ = stockfishWorkerBaseUrl;
 window.addEventListener("pagehide", () => {{
   try {{
     URL.revokeObjectURL(stockfishWorkerBaseUrl);
