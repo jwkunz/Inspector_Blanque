@@ -52,6 +52,7 @@ const elements = {
   prevMoveButton: document.querySelector("#prev-move-button"),
   nextMoveButton: document.querySelector("#next-move-button"),
   nextBlunderButton: document.querySelector("#next-blunder-button"),
+  evaluationPanel: document.querySelector(".panel.result"),
   whiteScore: document.querySelector("#white-score"),
   whitePlayer: document.querySelector("#white-player"),
   whiteAcpl: document.querySelector("#white-acpl"),
@@ -557,10 +558,15 @@ function renderViewedEvaluation() {
 }
 
 function renderUnavailableResult() {
+  setEvaluationAvailability(false);
   if (elements.whiteScore) elements.whiteScore.textContent = "Light: --";
   if (elements.blackScore) elements.blackScore.textContent = "Dark: --";
   if (elements.mateScore) elements.mateScore.textContent = "Mate: --";
   setNeedle(0);
+}
+
+function setEvaluationAvailability(isAvailable) {
+  elements.evaluationPanel?.classList.toggle("is-unavailable", !isAvailable);
 }
 
 function renderPlayerMeta() {
@@ -959,6 +965,7 @@ function getBestMoveAnalysisFen() {
 }
 
 function renderResult(result, fen) {
+  setEvaluationAvailability(true);
   const sideToMove = fen.split(/\s+/)[1] || "w";
 
   if (result.kind === "cp") {
@@ -1553,6 +1560,7 @@ function handleEngineLine(line) {
 }
 
 setNeedle(0);
+setEvaluationAvailability(false);
 renderAcpl(null);
 renderPlayerMeta();
 renderGameTimeMeta();
