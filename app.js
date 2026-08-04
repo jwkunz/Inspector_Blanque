@@ -2,6 +2,8 @@ import { Chess, validateFen } from "./vendor/chess/chess.js";
 
 const CP_CLAMP = 1000;
 const ENGINE_PATH = "./vendor/stockfish/stockfish-18-lite-single.js";
+const CACHE_STORAGE_KEY = "inspector-blanque-analysis-cache-v4";
+const CACHE_LIMIT = 500;
 const CATEGORY_KEYS = ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -83,6 +85,8 @@ const engineState = {
   activeAnalysis: null,
   cache: new Map(),
 };
+
+restoreAnalysisCache();
 
 const gameViewState = createEmptyGameViewState();
 
@@ -1460,6 +1464,49 @@ function findCachedAnalysis(fen, depth, moveTime, multiPv, searchMoveUci) {
   return null;
 }
 
+function restoreAnalysisCache() {
+  try {
+    const stored = window.sessionStorage.getItem(CACHE_STORAGE_KEY);
+    const entries = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(entries)) {
+      return;
+    }
+    for (const entry of entries.slice(-CACHE_LIMIT)) {
+      if (
+        typeof entry?.key === "string" &&
+        typeof entry?.value?.fen === "string" &&
+        entry.value?.result?.primaryScore
+      ) {
+        engineState.cache.set(entry.key, entry.value);
+      }
+    }
+  } catch (_error) {
+    // A blocked or corrupt browser cache must never prevent analysis.
+  }
+}
+
+function persistAnalysisCache() {
+  try {
+    const entries = Array.from(engineState.cache.entries()).slice(-CACHE_LIMIT).map(([key, value]) => ({ key, value }));
+    window.sessionStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(entries));
+  } catch (_error) {
+    // Continue normally when browser storage is unavailable or full.
+  }
+}
+
+function storeCachedAnalysis(analysis, result) {
+  const key = `${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}`;
+  engineState.cache.set(key, {
+    fen: analysis.fen,
+    depth: analysis.depth,
+    moveTime: analysis.moveTime,
+    multiPv: analysis.multiPv,
+    searchMoveUci: analysis.searchMoveUci,
+    result,
+  });
+  persistAnalysisCache();
+}
+
 function handleEngineLine(line) {
   const analysis = engineState.activeAnalysis;
   if (!analysis) {
@@ -1499,14 +1546,7 @@ function handleEngineLine(line) {
         .map((entry) => entry[1]),
       bestMoveUci: bestMoveMatch ? bestMoveMatch[1] : null,
     };
-    engineState.cache.set(`${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}`, {
-      fen: analysis.fen,
-      depth: analysis.depth,
-      moveTime: analysis.moveTime,
-      multiPv: analysis.multiPv,
-      searchMoveUci: analysis.searchMoveUci,
-      result,
-    });
+    storeCachedAnalysis(analysis, result);
     analysis.resolve(result);
   }
 }
