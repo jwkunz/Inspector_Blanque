@@ -36,7 +36,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.3.2`)
+- `VERSION` - release version (currently `4.3.3`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -65,7 +65,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v4_3_2_single_file.html`
+- `dist/Inspector_Blanque_v4_3_3_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 

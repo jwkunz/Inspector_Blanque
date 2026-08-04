@@ -183,6 +183,12 @@ button:disabled {
   font-size: 0.92rem;
 }
 
+.match-analysis-note {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 .error {
   color: var(--error);
   font-weight: 600;
