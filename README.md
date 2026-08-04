@@ -20,6 +20,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Move-category totals per side shown in table format with emoji markers (`Best`, `Excellent`, `Good`, `Inaccuracy`, `Mistake`, `Blunder`)
 - MultiPV-backed move grading using best-move gap comparisons
 - Fast, Standard, and Deep analysis profiles, with an optional borderline-category recheck pass
+- Cooperative match-analysis cancellation: completes the current position, then stops and shows partial results
 - Borderline-move depth rechecks with in-run evaluation caching for more stable labels
 - Phase-aware category thresholds (opening, middlegame, endgame)
 - Mate-aware category overrides for forced-mate transitions
@@ -37,7 +38,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.4.0`)
+- `VERSION` - release version (currently `4.4.1`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -66,7 +67,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v4_4_0_single_file.html`
+- `dist/Inspector_Blanque_v4_4_1_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 

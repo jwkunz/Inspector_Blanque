@@ -39,6 +39,7 @@ const elements = {
   loadPositionButton: document.querySelector("#load-position-button"),
   analyzeCurrentPositionButton: document.querySelector("#analyze-current-position-button"),
   analyzeButton: document.querySelector("#analyze-button"),
+  cancelAnalysisButton: document.querySelector("#cancel-analysis-button"),
   statusText: document.querySelector("#status-text"),
   errorText: document.querySelector("#error-text"),
   gameViewPanel: document.querySelector("#game-view-panel"),
@@ -94,6 +95,11 @@ const engineState = {
   cache: new Map(),
 };
 
+const analysisState = {
+  activeKind: null,
+  cancelRequested: false,
+};
+
 restoreAnalysisCache();
 
 const gameViewState = createEmptyGameViewState();
@@ -136,6 +142,8 @@ elements.analyzeCurrentPositionButton?.addEventListener("click", async () => {
   }
 
   clearError();
+  analysisState.activeKind = "current-position";
+  analysisState.cancelRequested = false;
   setBusy(true);
   try {
     const entry = gameViewState.timeline[gameViewState.currentIndex];
@@ -149,6 +157,7 @@ elements.analyzeCurrentPositionButton?.addEventListener("click", async () => {
     setError(error instanceof Error ? error.message : String(error));
     setStatus("Ready.");
   } finally {
+    analysisState.activeKind = null;
     setBusy(false);
   }
 });
@@ -172,6 +181,8 @@ elements.analyzeButton?.addEventListener("click", async () => {
   }
 
   clearError();
+  analysisState.activeKind = "match";
+  analysisState.cancelRequested = false;
   setBusy(true);
   try {
     const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
@@ -181,24 +192,40 @@ elements.analyzeButton?.addEventListener("click", async () => {
     setStatus("Analyzing match...");
     const result = await analyzePosition(finalEntry.fen, depth, moveTime, { multiPv: 3 });
     setPositionScore(gameViewState.finalIndex, result.primaryScore);
+    let matchAnalysis = null;
 
     if (gameViewState.moveHistory.length) {
       setStatus("Computing match move quality...");
-      const acpl = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime, {
+      matchAnalysis = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime, {
         allowBoundaryRechecks,
+        shouldCancel: () => analysisState.cancelRequested,
       });
-      renderAcpl(acpl);
+      renderAcpl(matchAnalysis);
     } else {
       renderAcpl(null);
     }
 
-    setStatus("Match analysis complete.");
+    setStatus(
+      analysisState.cancelRequested || matchAnalysis?.cancelled
+        ? "Match analysis cancelled. Partial results are shown."
+        : "Match analysis complete.",
+    );
   } catch (error) {
     setError(error instanceof Error ? error.message : String(error));
     setStatus("Ready.");
   } finally {
+    analysisState.activeKind = null;
     setBusy(false);
   }
+});
+
+elements.cancelAnalysisButton?.addEventListener("click", () => {
+  if (analysisState.activeKind !== "match" || analysisState.cancelRequested) {
+    return;
+  }
+  analysisState.cancelRequested = true;
+  updateCancelAnalysisButton();
+  setStatus("Cancelling after the current position finishes...");
 });
 
 elements.flipBoardButton?.addEventListener("click", () => {
@@ -330,6 +357,7 @@ function setBusy(isBusy) {
   if (elements.loadPositionButton) {
     elements.loadPositionButton.disabled = isBusy;
   }
+  updateCancelAnalysisButton();
   for (const input of [
     elements.depthInput,
     elements.timeInput,
@@ -340,6 +368,17 @@ function setBusy(isBusy) {
       input.disabled = isBusy;
     }
   }
+}
+
+function updateCancelAnalysisButton() {
+  if (!elements.cancelAnalysisButton) {
+    return;
+  }
+  const canCancel = analysisState.activeKind === "match" && !analysisState.cancelRequested;
+  elements.cancelAnalysisButton.disabled = !canCancel;
+  elements.cancelAnalysisButton.textContent = analysisState.cancelRequested
+    ? "Cancelling after current position..."
+    : "Cancel Analysis";
 }
 
 function applyAnalysisProfile(profileName) {
@@ -1288,12 +1327,17 @@ function adjustCategoryForConfidence(category, context) {
 
 async function computeAverageCentipawnLoss(moveHistory, depth, moveTime, options = {}) {
   const allowBoundaryRechecks = options.allowBoundaryRechecks !== false;
+  let cancelled = false;
   const totals = {
     w: { loss: 0, count: 0, categories: createCategoryBucket() },
     b: { loss: 0, count: 0, categories: createCategoryBucket() },
   };
 
   for (let i = 0; i < moveHistory.length; i += 1) {
+    if (options.shouldCancel?.()) {
+      cancelled = true;
+      break;
+    }
     const move = moveHistory[i];
     if (!move?.before || !move?.after || !move?.color) {
       continue;
@@ -1372,6 +1416,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime, options
   const darkLossPercent = (darkAvg / CP_CLAMP) * 100;
 
   return {
+    cancelled,
     light: {
       avg: lightAvg,
       total: totals.w.loss,
