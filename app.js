@@ -4,6 +4,11 @@ const CP_CLAMP = 1000;
 const ENGINE_PATH = "./vendor/stockfish/stockfish-18-lite-single.js";
 const CACHE_STORAGE_KEY = "inspector-blanque-analysis-cache-v4";
 const CACHE_LIMIT = 500;
+const ANALYSIS_PROFILES = {
+  fast: { depth: 10, moveTime: 750, boundaryRechecks: false },
+  standard: { depth: 12, moveTime: 5000, boundaryRechecks: true },
+  deep: { depth: 16, moveTime: 15000, boundaryRechecks: true },
+};
 const CATEGORY_KEYS = ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
@@ -29,6 +34,8 @@ const elements = {
   formatSelect: document.querySelector("#format-select"),
   depthInput: document.querySelector("#depth-input"),
   timeInput: document.querySelector("#time-input"),
+  analysisProfileSelect: document.querySelector("#analysis-profile-select"),
+  boundaryRechecksInput: document.querySelector("#boundary-rechecks-input"),
   loadPositionButton: document.querySelector("#load-position-button"),
   analyzeCurrentPositionButton: document.querySelector("#analyze-current-position-button"),
   analyzeButton: document.querySelector("#analyze-button"),
@@ -146,6 +153,18 @@ elements.analyzeCurrentPositionButton?.addEventListener("click", async () => {
   }
 });
 
+elements.analysisProfileSelect?.addEventListener("change", () => {
+  applyAnalysisProfile(elements.analysisProfileSelect.value);
+});
+
+for (const input of [elements.depthInput, elements.timeInput, elements.boundaryRechecksInput]) {
+  input?.addEventListener("input", () => {
+    if (elements.analysisProfileSelect) {
+      elements.analysisProfileSelect.value = "custom";
+    }
+  });
+}
+
 elements.analyzeButton?.addEventListener("click", async () => {
   if (!gameViewState.timeline.length) {
     setError("Load a PGN or FEN before analyzing the match.");
@@ -157,6 +176,7 @@ elements.analyzeButton?.addEventListener("click", async () => {
   try {
     const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
     const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
+    const allowBoundaryRechecks = Boolean(elements.boundaryRechecksInput?.checked);
     const finalEntry = gameViewState.timeline[gameViewState.finalIndex];
     setStatus("Analyzing match...");
     const result = await analyzePosition(finalEntry.fen, depth, moveTime, { multiPv: 3 });
@@ -164,7 +184,9 @@ elements.analyzeButton?.addEventListener("click", async () => {
 
     if (gameViewState.moveHistory.length) {
       setStatus("Computing match move quality...");
-      const acpl = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime);
+      const acpl = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime, {
+        allowBoundaryRechecks,
+      });
       renderAcpl(acpl);
     } else {
       renderAcpl(null);
@@ -308,6 +330,26 @@ function setBusy(isBusy) {
   if (elements.loadPositionButton) {
     elements.loadPositionButton.disabled = isBusy;
   }
+  for (const input of [
+    elements.depthInput,
+    elements.timeInput,
+    elements.analysisProfileSelect,
+    elements.boundaryRechecksInput,
+  ]) {
+    if (input) {
+      input.disabled = isBusy;
+    }
+  }
+}
+
+function applyAnalysisProfile(profileName) {
+  const profile = ANALYSIS_PROFILES[profileName];
+  if (!profile) {
+    return;
+  }
+  if (elements.depthInput) elements.depthInput.value = String(profile.depth);
+  if (elements.timeInput) elements.timeInput.value = String(profile.moveTime);
+  if (elements.boundaryRechecksInput) elements.boundaryRechecksInput.checked = profile.boundaryRechecks;
 }
 
 function setStatus(text) {
@@ -1244,7 +1286,8 @@ function adjustCategoryForConfidence(category, context) {
   return rankToCategory(rank);
 }
 
-async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
+async function computeAverageCentipawnLoss(moveHistory, depth, moveTime, options = {}) {
+  const allowBoundaryRechecks = options.allowBoundaryRechecks !== false;
   const totals = {
     w: { loss: 0, count: 0, categories: createCategoryBucket() },
     b: { loss: 0, count: 0, categories: createCategoryBucket() },
@@ -1284,7 +1327,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
     const volatilityCp = Math.abs(bestCpForMover - playedCpForMover);
     let recheckDeltaCp = null;
 
-    if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
+    if (allowBoundaryRechecks && isNearCategoryBoundary(loss, phase) && playedMoveUci) {
       const initialLoss = loss;
       const deeperDepth = Math.min(30, depth + 2);
       const deeperTime = Math.min(120000, Math.floor(moveTime * 1.5));

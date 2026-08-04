@@ -110,6 +110,15 @@
         </button>
         <div class="input-grid compact">
           <label class="control">
+            <span>Analysis profile</span>
+            <select id="analysis-profile-select">
+              <option value="fast">Fast — depth 10 / 750 ms</option>
+              <option value="standard" selected>Standard — depth 12 / 5 s</option>
+              <option value="deep">Deep — depth 16 / 15 s</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label class="control">
             <span>Max depth</span>
             <input id="depth-input" type="number" min="8" max="30" step="1" value="12" />
           </label>
@@ -118,6 +127,10 @@
             <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
           </label>
         </div>
+        <label class="checkbox-control">
+          <input id="boundary-rechecks-input" type="checkbox" checked />
+          <span>Recheck borderline move categories (slower, more stable)</span>
+        </label>
         <div class="analysis-actions">
           <button id="analyze-button" type="button">Analyze Match</button>
         </div>

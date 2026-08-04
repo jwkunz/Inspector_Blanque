@@ -19,6 +19,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - PGN player names and ratings shown in the Dark and Light summary cards when available
 - Move-category totals per side shown in table format with emoji markers (`Best`, `Excellent`, `Good`, `Inaccuracy`, `Mistake`, `Blunder`)
 - MultiPV-backed move grading using best-move gap comparisons
+- Fast, Standard, and Deep analysis profiles, with an optional borderline-category recheck pass
 - Borderline-move depth rechecks with in-run evaluation caching for more stable labels
 - Phase-aware category thresholds (opening, middlegame, endgame)
 - Mate-aware category overrides for forced-mate transitions
@@ -36,7 +37,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.3.3`)
+- `VERSION` - release version (currently `4.4.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -65,7 +66,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v4_3_3_single_file.html`
+- `dist/Inspector_Blanque_v4_4_0_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 
@@ -76,6 +77,7 @@ The build script clears prior `dist/` entries before creating the new package.
 - Manual flow: upload/paste, tap **Load Position**, set depth/time, then choose **Analyze Current Position** or **Analyze Match**.
 - Loading a PGN opens Game View on the latest move and lets you step through the game one ply at a time.
 - **Analyze Current Position** evaluates only the board currently shown in Game View. **Analyze Match** evaluates the complete loaded PGN and produces the move-quality summary.
+- Choose **Fast** for quick match grading, **Standard** for the previous default settings, or **Deep** for slower searches. Fast mode disables optional borderline-category rechecks; any setting change switches the profile to Custom.
 - The analysis actions remain unavailable until **Load Position** has populated Game View.
 - Engine analyses are retained in the browser session cache. A current-position analysis at the selected depth/time is reused by a later match analysis when it covers the same position, including after a page reload in the same browser session.
 - The move-characterization banner appears for viewed moves as grading data becomes available.
