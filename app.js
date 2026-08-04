@@ -10,6 +10,7 @@ const ANALYSIS_PROFILES = {
   deep: { depth: 16, moveTime: 15000, boundaryRechecks: true },
 };
 const CATEGORY_KEYS = ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
+const MATERIAL_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
 const PIECE_ASSETS = {
@@ -48,6 +49,9 @@ const elements = {
   timeControl: document.querySelector("#time-control"),
   lightClock: document.querySelector("#light-clock"),
   darkClock: document.querySelector("#dark-clock"),
+  whiteMaterialCaptured: document.querySelector("#white-material-captured"),
+  blackMaterialCaptured: document.querySelector("#black-material-captured"),
+  positionEvaluation: document.querySelector("#position-evaluation"),
   showBestMoveButton: document.querySelector("#show-best-move-button"),
   bestMoveText: document.querySelector("#best-move-text"),
   moveCharacterization: document.querySelector("#move-characterization"),
@@ -569,6 +573,7 @@ function setPositionScore(index, score) {
   gameViewState.positionScores.set(index, { kind: score.kind, value: score.value });
   if (gameViewState.currentIndex === index) {
     renderViewedEvaluation();
+    renderGameTimeMeta();
   }
 }
 
@@ -656,13 +661,20 @@ function renderPlayerMeta() {
 }
 
 function renderGameTimeMeta() {
+  const entry = gameViewState.timeline[gameViewState.currentIndex];
   const currentClocks = gameViewState.timeMeta.clocksByIndex?.[gameViewState.currentIndex] || {};
   const timeControlText = gameViewState.timeMeta.timeControl
     ? `Time Control: ${formatTimeControl(gameViewState.timeMeta.timeControl)}`
     : null;
   const lightClockText = currentClocks.white ? `Light Clock: ${currentClocks.white}` : null;
   const darkClockText = currentClocks.black ? `Dark Clock: ${currentClocks.black}` : null;
-  const hasAny = Boolean(timeControlText || lightClockText || darkClockText);
+  const capturedMaterial = entry ? getCapturedMaterialAtIndex(gameViewState.currentIndex) : null;
+  const whiteMaterialText = capturedMaterial ? `White captured: ${capturedMaterial.white}` : null;
+  const blackMaterialText = capturedMaterial ? `Black captured: ${capturedMaterial.black}` : null;
+  const evaluationText = entry ? formatGameViewEvaluation(gameViewState.positionScores.get(gameViewState.currentIndex), entry.fen) : null;
+  const hasAny = Boolean(
+    timeControlText || lightClockText || darkClockText || whiteMaterialText || blackMaterialText || evaluationText,
+  );
 
   if (elements.gameTimeMeta) {
     elements.gameTimeMeta.hidden = !hasAny;
@@ -670,6 +682,36 @@ function renderGameTimeMeta() {
   setMetaText(elements.timeControl, timeControlText);
   setMetaText(elements.lightClock, lightClockText);
   setMetaText(elements.darkClock, darkClockText);
+  setMetaText(elements.whiteMaterialCaptured, whiteMaterialText);
+  setMetaText(elements.blackMaterialCaptured, blackMaterialText);
+  setMetaText(elements.positionEvaluation, evaluationText);
+}
+
+function getCapturedMaterialAtIndex(index) {
+  const totals = { white: 0, black: 0 };
+  for (let moveIndex = 1; moveIndex <= index; moveIndex += 1) {
+    const move = gameViewState.timeline[moveIndex]?.move;
+    const value = MATERIAL_VALUES[move?.captured?.toLowerCase()] || 0;
+    if (move?.color === "w") {
+      totals.white += value;
+    } else if (move?.color === "b") {
+      totals.black += value;
+    }
+  }
+  return totals;
+}
+
+function formatGameViewEvaluation(score, fen) {
+  if (!score) {
+    return "Evaluation: --";
+  }
+  const sideToMove = fen.split(/\s+/)[1] || "w";
+  if (score.kind === "cp") {
+    const whiteCp = sideToMove === "w" ? score.value : -score.value;
+    return `Evaluation: ${formatCp(whiteCp)}`;
+  }
+  const winner = inferMateWinner(sideToMove, score.value);
+  return `Evaluation: Mate for ${winner === "w" ? "Light" : "Dark"} in ${Math.abs(score.value)}`;
 }
 
 function setPlayerMetaText(element, text) {

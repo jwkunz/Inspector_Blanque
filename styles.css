@@ -275,6 +275,12 @@ button:disabled {
   font-weight: 600;
 }
 
+.game-stat-pill {
+  min-height: 26px;
+  padding: 0.22rem 0.48rem;
+  font-size: 0.72rem;
+}
+
 .move-characterization {
   margin: 0 0 0.7rem;
   padding: 0.55rem 0.75rem;

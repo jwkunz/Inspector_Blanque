@@ -14,6 +14,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Light-perspective centipawn gauge with mirrored Light/Dark score text
 - Needle and score display stay in sync with the currently viewed board position
 - PGN time control and clock annotations shown in Game View when available
+- Game View shows cumulative captured material for each side and the viewed position's textual evaluation
 - Average centipawn loss (Avg CPL) for Light and Dark, with quality percent shown as `100 - loss%`
 - Total CPL for Light and Dark over the full game
 - PGN player names and ratings shown in the Dark and Light summary cards when available
@@ -38,7 +39,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.4.1`)
+- `VERSION` - release version (currently `4.4.2`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -67,7 +68,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v4_4_1_single_file.html`
+- `dist/Inspector_Blanque_v4_4_2_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 
