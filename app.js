@@ -298,11 +298,11 @@ function createEmptyGameViewState() {
 
 function setBusy(isBusy) {
   if (elements.analyzeButton) {
-    elements.analyzeButton.disabled = isBusy;
+    elements.analyzeButton.disabled = isBusy || !gameViewState.timeline.length;
     elements.analyzeButton.textContent = isBusy ? "Analyzing..." : "Analyze Match";
   }
   if (elements.analyzeCurrentPositionButton) {
-    elements.analyzeCurrentPositionButton.disabled = isBusy;
+    elements.analyzeCurrentPositionButton.disabled = isBusy || !gameViewState.timeline.length;
   }
   if (elements.loadPositionButton) {
     elements.loadPositionButton.disabled = isBusy;
@@ -477,6 +477,7 @@ function initializeGameView(position, finalScore = null) {
     elements.gameViewPanel.hidden = false;
   }
   renderCurrentGameView();
+  setBusy(false);
 }
 
 function setPositionScore(index, score) {
@@ -1556,4 +1557,5 @@ renderAcpl(null);
 renderPlayerMeta();
 renderGameTimeMeta();
 updateNavigationControls();
+setBusy(false);
 setStatus("Ready.");

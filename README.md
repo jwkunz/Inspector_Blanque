@@ -36,7 +36,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.1.0`)
+- `VERSION` - release version (currently `4.2.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -65,7 +65,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v4_1_0_single_file.html`
+- `dist/Inspector_Blanque_v4_2_0_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 
@@ -76,6 +76,7 @@ The build script clears prior `dist/` entries before creating the new package.
 - Manual flow: upload/paste, tap **Load Position**, set depth/time, then choose **Analyze Current Position** or **Analyze Match**.
 - Loading a PGN opens Game View on the latest move and lets you step through the game one ply at a time.
 - **Analyze Current Position** evaluates only the board currently shown in Game View. **Analyze Match** evaluates the complete loaded PGN and produces the move-quality summary.
+- The analysis actions remain unavailable until **Load Position** has populated Game View.
 - Engine analyses are retained in the browser session cache. A current-position analysis at the selected depth/time is reused by a later match analysis when it covers the same position, including after a page reload in the same browser session.
 - The move-characterization banner appears for viewed moves as grading data becomes available.
 - If the PGN includes `TimeControl` or `[%clk ...]` comments, Game View shows that timing data near the top.
