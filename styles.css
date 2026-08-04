@@ -163,6 +163,14 @@ button:disabled {
   background: linear-gradient(180deg, #414146, #2c2c31);
 }
 
+.analysis-current-button {
+  background: linear-gradient(180deg, #dc2626, #991b1b);
+}
+
+.analysis-current-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+}
+
 .status,
 .error,
 .note {

@@ -47,28 +47,6 @@
         </div>
       </section>
 
-      <section class="panel controls" aria-label="Analysis controls">
-        <h2>Analysis Controls</h2>
-        <div class="input-grid compact">
-          <label class="control">
-            <span>Max depth</span>
-            <input id="depth-input" type="number" min="8" max="30" step="1" value="12" />
-          </label>
-          <label class="control">
-            <span>Max time (ms)</span>
-            <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
-          </label>
-        </div>
-        <div class="analysis-actions">
-          <button id="analyze-current-position-button" class="secondary-button" type="button">
-            Analyze Current Position
-          </button>
-          <button id="analyze-button" type="button">Analyze Match</button>
-        </div>
-        <p id="status-text" class="status">Ready.</p>
-        <p id="error-text" class="error" hidden></p>
-      </section>
-
       <section id="game-view-panel" class="panel game-view" aria-label="Game view" hidden>
         <div class="panel-heading">
           <h2>Game View</h2>
@@ -123,6 +101,28 @@
             &gt;|
           </button>
         </div>
+      </section>
+
+      <section class="panel controls" aria-label="Analysis controls">
+        <h2>Analysis Controls</h2>
+        <button id="analyze-current-position-button" class="analysis-current-button" type="button">
+          Analyze Current Position
+        </button>
+        <div class="input-grid compact">
+          <label class="control">
+            <span>Max depth</span>
+            <input id="depth-input" type="number" min="8" max="30" step="1" value="12" />
+          </label>
+          <label class="control">
+            <span>Max time (ms)</span>
+            <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
+          </label>
+        </div>
+        <div class="analysis-actions">
+          <button id="analyze-button" type="button">Analyze Match</button>
+        </div>
+        <p id="status-text" class="status">Ready.</p>
+        <p id="error-text" class="error" hidden></p>
       </section>
 
       <section class="panel result" aria-label="Evaluation result">
