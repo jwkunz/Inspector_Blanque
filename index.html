@@ -42,6 +42,9 @@
             </select>
           </label>
         </div>
+        <div class="position-input-actions">
+          <button id="load-position-button" type="button">Load Position</button>
+        </div>
       </section>
 
       <section class="panel controls" aria-label="Analysis controls">
@@ -56,7 +59,12 @@
             <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
           </label>
         </div>
-        <button id="analyze-button" type="button">Analyze Position</button>
+        <div class="analysis-actions">
+          <button id="analyze-current-position-button" class="secondary-button" type="button">
+            Analyze Current Position
+          </button>
+          <button id="analyze-button" type="button">Analyze Match</button>
+        </div>
         <p id="status-text" class="status">Ready.</p>
         <p id="error-text" class="error" hidden></p>
       </section>

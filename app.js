@@ -27,6 +27,8 @@ const elements = {
   formatSelect: document.querySelector("#format-select"),
   depthInput: document.querySelector("#depth-input"),
   timeInput: document.querySelector("#time-input"),
+  loadPositionButton: document.querySelector("#load-position-button"),
+  analyzeCurrentPositionButton: document.querySelector("#analyze-current-position-button"),
   analyzeButton: document.querySelector("#analyze-button"),
   statusText: document.querySelector("#status-text"),
   errorText: document.querySelector("#error-text"),
@@ -96,38 +98,74 @@ if (elements.logo) {
   });
 }
 
-elements.analyzeButton?.addEventListener("click", async () => {
+elements.loadPositionButton?.addEventListener("click", async () => {
   clearError();
   setBusy(true);
-  engineState.cache.clear();
 
   try {
     const source = await getInputText();
     const mode = resolveFormat(source.text, source.sourceType, elements.formatSelect?.value || "auto");
     const position = mode === "fen" ? parseFen(source.text) : parsePgnGame(source.text);
+    initializeGameView(position);
+    renderAcpl(null);
+    setStatus(position.multiGameDetected ? "PGN has multiple games; loaded the first game." : "Position loaded.");
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error));
+    setStatus("Ready.");
+  } finally {
+    setBusy(false);
+  }
+});
 
-    if (position.multiGameDetected) {
-      setStatus("PGN has multiple games; analyzing the first game only.");
-    } else {
-      setStatus("Analyzing position...");
-    }
+elements.analyzeCurrentPositionButton?.addEventListener("click", async () => {
+  if (!gameViewState.timeline.length) {
+    setError("Load a PGN or FEN before analyzing the current position.");
+    return;
+  }
 
+  clearError();
+  setBusy(true);
+  try {
+    const entry = gameViewState.timeline[gameViewState.currentIndex];
     const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
     const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
-    const result = await analyzePosition(position.fen, depth, moveTime);
+    setStatus("Analyzing current position...");
+    const result = await analyzePosition(entry.fen, depth, moveTime, { multiPv: 3 });
+    setPositionScore(gameViewState.currentIndex, result.primaryScore);
+    setStatus("Current-position analysis complete.");
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error));
+    setStatus("Ready.");
+  } finally {
+    setBusy(false);
+  }
+});
 
-    initializeGameView(position, result.primaryScore);
-    renderAcpl(null);
+elements.analyzeButton?.addEventListener("click", async () => {
+  if (!gameViewState.timeline.length) {
+    setError("Load a PGN or FEN before analyzing the match.");
+    return;
+  }
 
-    if (position.moveHistory.length) {
-      setStatus("Computing game move quality...");
-      const acpl = await computeAverageCentipawnLoss(position.moveHistory, depth, moveTime);
+  clearError();
+  setBusy(true);
+  try {
+    const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
+    const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
+    const finalEntry = gameViewState.timeline[gameViewState.finalIndex];
+    setStatus("Analyzing match...");
+    const result = await analyzePosition(finalEntry.fen, depth, moveTime, { multiPv: 3 });
+    setPositionScore(gameViewState.finalIndex, result.primaryScore);
+
+    if (gameViewState.moveHistory.length) {
+      setStatus("Computing match move quality...");
+      const acpl = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime);
       renderAcpl(acpl);
     } else {
-      setStatus("Analysis complete.");
+      renderAcpl(null);
     }
 
-    setStatus("Analysis complete.");
+    setStatus("Match analysis complete.");
   } catch (error) {
     setError(error instanceof Error ? error.message : String(error));
     setStatus("Ready.");
@@ -240,6 +278,7 @@ window.addEventListener("resize", () => {
 function createEmptyGameViewState() {
   return {
     mode: null,
+    moveHistory: [],
     orientation: "white",
     timeline: [],
     currentIndex: 0,
@@ -256,7 +295,13 @@ function createEmptyGameViewState() {
 function setBusy(isBusy) {
   if (elements.analyzeButton) {
     elements.analyzeButton.disabled = isBusy;
-    elements.analyzeButton.textContent = isBusy ? "Analyzing..." : "Analyze Position";
+    elements.analyzeButton.textContent = isBusy ? "Analyzing..." : "Analyze Match";
+  }
+  if (elements.analyzeCurrentPositionButton) {
+    elements.analyzeCurrentPositionButton.disabled = isBusy;
+  }
+  if (elements.loadPositionButton) {
+    elements.loadPositionButton.disabled = isBusy;
   }
 }
 
@@ -405,10 +450,11 @@ function formatPlayerMeta(name, rating) {
   return null;
 }
 
-function initializeGameView(position, finalScore) {
+function initializeGameView(position, finalScore = null) {
   gameViewState.mode = position.mode;
   gameViewState.orientation = "white";
   gameViewState.timeline = position.timeline;
+  gameViewState.moveHistory = position.moveHistory;
   gameViewState.currentIndex = Math.max(0, position.timeline.length - 1);
   gameViewState.finalIndex = gameViewState.currentIndex;
   gameViewState.playerMeta = position.playerMeta;
@@ -418,7 +464,9 @@ function initializeGameView(position, finalScore) {
   gameViewState.bestMoveVisible = false;
   gameViewState.bestMoves = new Map();
 
-  setPositionScore(gameViewState.finalIndex, finalScore);
+  if (finalScore) {
+    setPositionScore(gameViewState.finalIndex, finalScore);
+  }
   renderPlayerMeta();
   renderGameTimeMeta();
   if (elements.gameViewPanel) {
@@ -1356,10 +1404,9 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
 
   const multiPv = Math.max(1, Number.parseInt(String(options.multiPv ?? 1), 10) || 1);
   const searchMoveUci = options.searchMoveUci || null;
-  const includeBestMove = Boolean(options.includeBestMove);
-  const cacheKey = `${fen}|d${depth}|t${moveTime}|mpv${multiPv}|sm:${searchMoveUci || "-"}|bm:${includeBestMove ? 1 : 0}`;
-  if (engineState.cache.has(cacheKey)) {
-    return engineState.cache.get(cacheKey);
+  const cachedResult = findCachedAnalysis(fen, depth, moveTime, multiPv, searchMoveUci);
+  if (cachedResult) {
+    return cachedResult;
   }
 
   return new Promise((resolve, reject) => {
@@ -1385,7 +1432,6 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
       moveTime,
       multiPv,
       searchMoveUci,
-      includeBestMove,
     };
 
     engineState.worker.postMessage(`setoption name MultiPV value ${multiPv}`);
@@ -1397,6 +1443,21 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
     }
     engineState.worker.postMessage(goCommand);
   });
+}
+
+function findCachedAnalysis(fen, depth, moveTime, multiPv, searchMoveUci) {
+  for (const cached of engineState.cache.values()) {
+    if (
+      cached.fen === fen &&
+      cached.depth === depth &&
+      cached.moveTime === moveTime &&
+      cached.searchMoveUci === searchMoveUci &&
+      cached.multiPv >= multiPv
+    ) {
+      return cached.result;
+    }
+  }
+  return null;
 }
 
 function handleEngineLine(line) {
@@ -1438,10 +1499,14 @@ function handleEngineLine(line) {
         .map((entry) => entry[1]),
       bestMoveUci: bestMoveMatch ? bestMoveMatch[1] : null,
     };
-    engineState.cache.set(
-      `${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}|bm:${analysis.includeBestMove ? 1 : 0}`,
+    engineState.cache.set(`${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}`, {
+      fen: analysis.fen,
+      depth: analysis.depth,
+      moveTime: analysis.moveTime,
+      multiPv: analysis.multiPv,
+      searchMoveUci: analysis.searchMoveUci,
       result,
-    );
+    });
     analysis.resolve(result);
   }
 }

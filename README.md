@@ -5,7 +5,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 ## Features
 
 - Upload or paste PGN/FEN input
-- PGN analysis defaults to the final position in the first game
+- Load PGN/FEN input into Game View before choosing an analysis action
 - Local, offline Stockfish WASM evaluation in browser
 - VS Code-style dark interface with mobile-friendly layout
 - Game View panel with a navigable chessboard and board-flip control
@@ -36,7 +36,7 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - `vendor/chess/chess.js` - local chess parser
 - `vendor/pieces/*` - local chess piece SVG assets + attribution
 - `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `3.3.0`)
+- `VERSION` - release version (currently `4.0.0`)
 - `MIT_LICENSE.txt` - MIT license text for this project
 - `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
 
@@ -65,7 +65,7 @@ Run:
 
 This creates a versioned standalone artifact such as:
 
-- `dist/Inspector_Blanque_v3_3_0_single_file.html`
+- `dist/Inspector_Blanque_v4_0_0_single_file.html`
 
 The build script clears prior `dist/` entries before creating the new package.
 
@@ -73,8 +73,10 @@ The build script clears prior `dist/` entries before creating the new package.
 
 - Works without external APIs once files are local.
 - If a PGN has multiple games, only the first game is analyzed.
-- Manual analyze flow: upload/paste, set depth/time, then tap **Analyze Position**.
-- When a PGN is analyzed, Game View opens on the latest move and lets you step through the game one ply at a time.
+- Manual flow: upload/paste, tap **Load Position**, set depth/time, then choose **Analyze Current Position** or **Analyze Match**.
+- Loading a PGN opens Game View on the latest move and lets you step through the game one ply at a time.
+- **Analyze Current Position** evaluates only the board currently shown in Game View. **Analyze Match** evaluates the complete loaded PGN and produces the move-quality summary.
+- Engine analyses are retained for the browser session. A current-position analysis at the selected depth/time is reused by a later match analysis when it covers the same position.
 - The move-characterization banner appears for viewed moves as grading data becomes available.
 - If the PGN includes `TimeControl` or `[%clk ...]` comments, Game View shows that timing data near the top.
 - Tapping `Show Best Move` reveals the engine best move for the currently viewed position and keeps it in sync while browsing.
