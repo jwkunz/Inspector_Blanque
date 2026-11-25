@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_primary">#FF252526</color>
+    <color name="brand_primary_variant">#FF1E1E1E</color>
+    <color name="brand_secondary">#FF0E639C</color>
+    <color name="brand_secondary_variant">#FF264F78</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

@@ -1,6 +1,15 @@
 # Inspector Blanque
 
-Mobile-first standalone web app for evaluating chess positions with a local Stockfish WASM engine.
+![Inspector Blanque logo](web/Inspector_Blanque_logo.png)
+
+A mobile-first chess position and game analyzer. It evaluates positions and grades every move of a PGN with a local Stockfish WebAssembly engine, entirely on your device and offline. It ships as a web app and as an Android app built from the same code.
+
+## Get it
+
+| Where | What |
+|-------|------|
+| **[jwkunz.github.io/Inspector_Blanque](https://jwkunz.github.io/Inspector_Blanque/)** | The web app, always the latest `main` (deployed by GitHub Pages) |
+| **[Releases](https://github.com/jwkunz/Inspector_Blanque/releases)** | `inspector-blanque-vX.Y.Z.html`, a single self-contained file you can save and open locally, and `inspector-blanque-vX.Y.Z-debug.apk`, the Android app |
 
 ## Features
 
@@ -31,48 +40,81 @@ Mobile-first standalone web app for evaluating chess positions with a local Stoc
 - Mate handling (`Mate in N`) with gauge pinning
 - No best move is shown by default; principal variation lines and broader recommendation output remain hidden
 
-## Files
+## Repository layout
 
-- `index.html` - single-page interface
-- `styles.css` - VS Code-style dark theme
-- `app.js` - parsing + Stockfish UCI integration
-- `vendor/chess/chess.js` - local chess parser
-- `vendor/pieces/*` - local chess piece SVG assets + attribution
-- `vendor/stockfish/*` - local Stockfish worker + wasm
-- `VERSION` - release version (currently `4.4.2`)
-- `MIT_LICENSE.txt` - MIT license text for this project
-- `scripts/build_release.sh` - packages a standalone single-file HTML release in `dist/`
-
-Third-party dependencies in `vendor/` retain their upstream licenses.
-The chess piece SVGs in `vendor/pieces/` are by Colin M. L. Burnett under CC BY-SA 3.0.
-
-## Run
-
-Serve the folder over HTTP (recommended):
-
-```bash
-python3 -m http.server 8080
+```
+VERSION                  the one place the project version lives
+web/                     the web app
+  index.html               single-page interface
+  styles.css               VS Code-style dark theme
+  app.js                   PGN/FEN parsing, Stockfish UCI integration, move grading
+  Inspector_Blanque_logo.png
+  vendor/chess/            local chess.js parser
+  vendor/pieces/           chess piece SVGs (CC BY-SA 3.0, see ATTRIBUTION.txt)
+  vendor/stockfish/        Stockfish worker + wasm
+  scripts/build_release.sh packages everything into one HTML file in web/dist/
+Android/                 Gradle project: a WebView app that bundles the web build
+scripts/version.mjs      reads, sets and checks the version
+.github/workflows/       ci.yml (builds and releases) and pages.yml (site deploy)
 ```
 
-Then open `http://localhost:8080` in Chrome or Edge.
+The web app is edited in exactly one place, `web/`. Both the GitHub Pages site and the Android app are built from it, so a push to `main` updates the site, and the next APK build picks up the same code. Third-party code in `web/vendor/` keeps its upstream license.
 
-For packaged releases, open the generated single-file HTML in the `dist/` folder.
+## How it fits together
 
-## Build a single-file release
+1. `web/scripts/build_release.sh` inlines the styles, scripts, chess.js, Stockfish (with its wasm), piece sprites and logo into one HTML file, `web/dist/Inspector_Blanque_vX_Y_Z_single_file.html` (git-ignored).
+2. That file is:
+   - copied to the site as `index.html` by `pages.yml`,
+   - bundled by Gradle into the Android app as `assets/index.html`, which `MainActivity` loads in a WebView (with a file chooser for PGN upload),
+   - attached to each GitHub release.
 
-Run:
+## Running and building locally
+
+**Web.** Needs only `bash` and `python3`.
 
 ```bash
-./scripts/build_release.sh
+cd web
+python3 -m http.server 8080         # run the multi-file source at http://localhost:8080 (Chrome or Edge)
+./scripts/build_release.sh          # builds web/dist/Inspector_Blanque_vX_Y_Z_single_file.html; open it in a browser
 ```
 
-This creates a versioned standalone artifact such as:
+**Android.** Needs JDK 21 and the Android SDK (point `sdk.dir` at it in `Android/local.properties`, or open `Android/` in Android Studio).
 
-- `dist/Inspector_Blanque_v4_4_2_single_file.html`
+```bash
+cd Android
+./gradlew :app:assembleDebug        # builds the web page first, then the APK
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
 
-The build script clears prior `dist/` entries before creating the new package.
+Pass `-PskipWebBuild` to reuse an existing `web/dist/` build. The APK is a debug build; a Play Store upload needs a signed release build, which is not set up here.
 
-## Notes
+## Continuous integration
+
+- **`ci.yml`** runs on pushes to `main`, tags and pull requests: checks the version, builds the single HTML file (and verifies it has no external references), and builds the debug APK.
+- **On a `v*` tag** it also publishes a GitHub release containing the HTML file and the APK.
+- **`pages.yml`** builds the single HTML file and deploys it to GitHub Pages on every push to `main`.
+
+## Versioning and releasing
+
+```bash
+node scripts/version.mjs                # print the version
+node scripts/version.mjs set 4.5.0      # update VERSION
+node scripts/version.mjs check          # fail if the build files stop reading VERSION
+```
+
+Then commit and tag:
+
+```bash
+git tag v4.5.0 && git push origin v4.5.0
+```
+
+CI refuses to release if the tag doesn't match `VERSION`. The Android `versionName` and `versionCode` (`major*10000 + minor*100 + patch`) are derived from `VERSION`.
+
+## License
+
+MIT. See [LICENSE](LICENSE). The chess piece SVGs in `web/vendor/pieces/` are by Colin M. L. Burnett under CC BY-SA 3.0.
+
+## Usage notes
 
 - Works without external APIs once files are local.
 - If a PGN has multiple games, only the first game is analyzed.

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="$(tr -d '[:space:]' < "${ROOT_DIR}/VERSION")"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"   # web/
+REPO_DIR="$(cd "${ROOT_DIR}/.." && pwd)"
+VERSION="$(tr -d '[:space:]' < "${REPO_DIR}/VERSION")"
 if [[ -z "${VERSION}" ]]; then
   echo "VERSION file is empty." >&2
   exit 1

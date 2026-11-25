@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    name: Version files agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check VERSION and (for a release) the tag
+        run: node scripts/version.mjs check "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}"
+
+  web:
+    name: Single-file build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the single HTML file
+        run: ./scripts/build_release.sh
+        working-directory: web
+      - name: Check the build is one self-contained file
+        run: |
+          test "$(ls web/dist/Inspector_Blanque_v*_single_file.html | wc -l)" = 1
+          ! grep -E '<script[^>]+src=|<link[^>]+href=' web/dist/Inspector_Blanque_v*_single_file.html
+      - run: cp web/dist/Inspector_Blanque_v*_single_file.html "$RUNNER_TEMP/inspector_blanque.html"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspector-blanque-html
+          path: ${{ runner.temp }}/inspector_blanque.html
+          if-no-files-found: error
+
+  android:
+    name: Android debug APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build APK (Gradle builds the web page the app bundles)
+        run: ./gradlew :app:assembleDebug --no-daemon
+        working-directory: Android
+      - run: cp Android/app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/inspector-blanque-debug.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspector-blanque-apk
+          path: ${{ runner.temp }}/inspector-blanque-debug.apk
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, web, android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mv artifacts/inspector_blanque.html "inspector-blanque-$TAG.html"
+          mv artifacts/inspector-blanque-debug.apk "inspector-blanque-$TAG-debug.apk"
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --title "Inspector Blanque $TAG" --generate-notes \
+            "inspector-blanque-$TAG.html#Inspector Blanque (single HTML file)" \
+            "inspector-blanque-$TAG-debug.apk#Inspector Blanque (Android debug APK)"

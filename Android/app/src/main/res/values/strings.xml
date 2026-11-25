@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Inspector Blanque</string>
+    <string name="file_picker_unavailable">No file picker is available on this device.</string>
+</resources>

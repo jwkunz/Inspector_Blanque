@@ -1,5 +1,30 @@
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+*.iml
+
+# --- Web ---
 node_modules/
 package/
 *.tgz
-.DS_Store
-dist/
+/web/dist/
+
+# --- Android / Gradle ---
+/Android/.gradle/
+/Android/.kotlin/
+/Android/build/
+/Android/app/build/
+/Android/.cxx/
+/Android/captures/
+/Android/local.properties
+
+# Build outputs and signing material
+*.apk
+*.aab
+*.ap_
+*.dex
+*.keystore
+*.jks
